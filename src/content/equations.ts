@@ -1,0 +1,399 @@
+export type EquationId = string;
+
+export interface Variable {
+  symbol: string; // LaTeX
+  meaning: string;
+  unit: string;
+}
+
+export interface Equation {
+  id: EquationId;
+  latex: string;
+  name: string;
+  chapter: string; // "Ch 4"
+  variables: Variable[];
+  useWhen: string[];
+  dontUseWhen: string[];
+  triggers: string[];
+  /** true = likely on the provided formula sheet; false = derived result. Easy to edit later. */
+  onSheet: boolean;
+  derivedFrom?: EquationId[];
+}
+
+const v = (symbol: string, meaning: string, unit: string): Variable => ({ symbol, meaning, unit });
+
+export const EQUATIONS: Equation[] = [
+  // ================= Kinematics (Ch 2 / Ch 4) =================
+  {
+    id: "kin-v",
+    latex: "v = v_0 + a t",
+    name: "Velocity vs time (constant a)",
+    chapter: "Ch 2",
+    variables: [v("v", "final velocity", "m/s"), v("v_0", "initial velocity", "m/s"), v("a", "acceleration", "m/s²"), v("t", "time", "s")],
+    useWhen: ["Acceleration is constant and you know (or want) time", "Free fall with a = −g"],
+    dontUseWhen: ["Acceleration changes with time or position (use calculus or work–energy)", "You don't have time and don't need it (use v² = v₀² + 2aΔx)"],
+    triggers: ["constant acceleration", "after t seconds", "how long until", "comes to rest"],
+    onSheet: true,
+  },
+  {
+    id: "kin-x",
+    latex: "x = x_0 + v_0 t + \\tfrac{1}{2} a t^2",
+    name: "Position vs time (constant a)",
+    chapter: "Ch 2",
+    variables: [v("x", "final position", "m"), v("x_0", "initial position", "m"), v("v_0", "initial velocity", "m/s"), v("a", "acceleration", "m/s²"), v("t", "time", "s")],
+    useWhen: ["Constant acceleration; you know time and want displacement (or vice versa)", "Projectile motion, applied separately to x (a = 0) and y (a = −g)"],
+    dontUseWhen: ["Acceleration is not constant", "Reading a graph — use slopes/areas instead"],
+    triggers: ["how far", "displacement after", "falls from rest", "lands after"],
+    onSheet: true,
+  },
+  {
+    id: "kin-v2",
+    latex: "v^2 = v_0^2 + 2a\\,\\Delta x",
+    name: "Velocity–displacement (constant a)",
+    chapter: "Ch 2",
+    variables: [v("v", "final velocity", "m/s"), v("v_0", "initial velocity", "m/s"), v("a", "acceleration", "m/s²"), v("\\Delta x", "displacement", "m")],
+    useWhen: ["Constant acceleration and time is neither given nor asked", "Stopping distance, speed after falling a height"],
+    dontUseWhen: ["Acceleration varies (use W_net = ΔK instead)", "You need the time"],
+    triggers: ["stopping distance", "speed after falling", "no time given"],
+    onSheet: true,
+  },
+  {
+    id: "kin-avg",
+    latex: "\\Delta x = \\tfrac{1}{2}(v_0 + v)\\,t",
+    name: "Displacement from average velocity",
+    chapter: "Ch 2",
+    variables: [v("\\Delta x", "displacement", "m"), v("v_0", "initial velocity", "m/s"), v("v", "final velocity", "m/s"), v("t", "time", "s")],
+    useWhen: ["Constant acceleration, you know both velocities and time but not a"],
+    dontUseWhen: ["Acceleration is not constant — the average velocity is not the midpoint"],
+    triggers: ["average velocity", "both initial and final speed known"],
+    onSheet: true,
+  },
+
+  // ================= Vectors (Ch 1–3) =================
+  {
+    id: "vec-components",
+    latex: "A_x = A\\cos\\theta,\\quad A_y = A\\sin\\theta",
+    name: "Vector components",
+    chapter: "Ch 3",
+    variables: [v("A", "magnitude", "—"), v("\\theta", "angle measured from the +x axis", "°")],
+    useWhen: ["Breaking a vector into x and y parts before adding or applying Newton's 2nd law", "θ is measured from the +x axis (counter-clockwise)"],
+    dontUseWhen: ["θ is measured from the y-axis — then A_x = A sin θ and A_y = A cos θ", "The vector is in quadrant II–IV without sign care"],
+    triggers: ["components", "at an angle of", "resolve", "north of east"],
+    onSheet: true,
+  },
+  {
+    id: "vec-magnitude",
+    latex: "A = \\sqrt{A_x^2 + A_y^2}",
+    name: "Vector magnitude",
+    chapter: "Ch 3",
+    variables: [v("A", "magnitude", "—"), v("A_x", "x component", "—"), v("A_y", "y component", "—")],
+    useWhen: ["You have components and want the length (resultant magnitude, net force, total acceleration)"],
+    dontUseWhen: ["Components are not perpendicular"],
+    triggers: ["magnitude of the resultant", "net", "total acceleration"],
+    onSheet: true,
+  },
+  {
+    id: "vec-direction",
+    latex: "\\theta = \\tan^{-1}\\!\\left(\\frac{A_y}{A_x}\\right)",
+    name: "Vector direction",
+    chapter: "Ch 3",
+    variables: [v("\\theta", "angle from +x axis", "°"), v("A_y", "y component", "—"), v("A_x", "x component", "—")],
+    useWhen: ["You have components and want the angle from the +x axis"],
+    dontUseWhen: ["A_x < 0 — add 180° to the calculator result (quadrant II/III)", "You inverted the ratio (A_x/A_y gives the angle from the y-axis)"],
+    triggers: ["direction", "angle of the resultant", "what angle"],
+    onSheet: true,
+  },
+
+  // ================= Circular motion (Ch 4) =================
+  {
+    id: "rad-conv",
+    latex: "\\theta_{\\text{rad}} = \\theta_{\\deg}\\cdot\\frac{\\pi}{180^\\circ},\\qquad 1\\ \\text{rev} = 2\\pi\\ \\text{rad}",
+    name: "Radians conversion",
+    chapter: "Ch 4",
+    variables: [v("\\theta", "angle", "rad / ° / rev")],
+    useWhen: ["Any formula with θ or ω (s = rθ, v = rω, a_c = rω²) — they only work in radians", "Converting rev/min or rev/s to rad/s"],
+    dontUseWhen: ["Trig functions on a calculator in degree mode — they take degrees directly"],
+    triggers: ["degrees", "revolutions", "rev/min", "rpm", "radians"],
+    onSheet: true,
+  },
+  {
+    id: "arc-length",
+    latex: "s = r\\theta",
+    name: "Arc length",
+    chapter: "Ch 4",
+    variables: [v("s", "arc length", "m"), v("r", "radius", "m"), v("\\theta", "angle swept", "rad")],
+    useWhen: ["Distance travelled along a circular path for a given angle", "Converting an angle swept to a distance"],
+    dontUseWhen: ["θ is in degrees or revolutions — convert first", "You want the straight-line (chord) distance"],
+    triggers: ["arc", "distance along the circle", "through an angle of", "how far does the tip move"],
+    onSheet: true,
+  },
+  {
+    id: "v-2pir-over-T",
+    latex: "v = \\frac{2\\pi r}{T}",
+    name: "Speed in uniform circular motion",
+    chapter: "Ch 4",
+    variables: [v("v", "tangential speed", "m/s"), v("r", "radius", "m"), v("T", "period (time for one revolution)", "s")],
+    useWhen: ["Constant speed around a circle and you know the period (or rev/s, f = 1/T)"],
+    dontUseWhen: ["Speed is changing (then it only gives the speed at one instant if you know T there)", "T is given per minute without converting to seconds"],
+    triggers: ["period", "one revolution takes", "rev/s", "circumference"],
+    onSheet: true,
+  },
+  {
+    id: "omega-def",
+    latex: "\\omega = \\frac{\\Delta\\theta}{\\Delta t} = \\frac{2\\pi}{T} = 2\\pi f",
+    name: "Angular velocity",
+    chapter: "Ch 4",
+    variables: [v("\\omega", "angular velocity", "rad/s"), v("\\Delta\\theta", "angle swept", "rad"), v("\\Delta t", "time", "s"), v("T", "period", "s"), v("f", "frequency", "rev/s")],
+    useWhen: ["Converting between period, frequency (rev/s, rpm) and rad/s", "Angle swept in a given time"],
+    dontUseWhen: ["Δθ is in degrees or revolutions — convert to radians first", "f is in rev/min — divide by 60 first"],
+    triggers: ["angular speed", "rad/s", "rpm", "rev/min", "rotates at"],
+    onSheet: true,
+  },
+  {
+    id: "v-r-omega",
+    latex: "v = r\\omega",
+    name: "Tangential speed from angular velocity",
+    chapter: "Ch 4",
+    variables: [v("v", "tangential speed", "m/s"), v("r", "radius", "m"), v("\\omega", "angular velocity", "rad/s")],
+    useWhen: ["Converting between linear speed at radius r and angular speed", "Points on a rigid rotating object (same ω, different v)"],
+    dontUseWhen: ["ω is not in rad/s", "r is the diameter"],
+    triggers: ["tip of the blade", "point on the rim", "rad/s", "linear speed of a point"],
+    onSheet: true,
+  },
+  {
+    id: "ac-v2-over-r",
+    latex: "a_c = \\frac{v^2}{r} = r\\omega^2",
+    name: "Centripetal acceleration",
+    chapter: "Ch 4",
+    variables: [v("a_c", "centripetal acceleration (toward center)", "m/s²"), v("v", "speed", "m/s"), v("r", "radius", "m"), v("\\omega", "angular velocity", "rad/s")],
+    useWhen: ["Anything moving on a circular path (even if speed is also changing — this is the radial part)", "Setting up ΣF_c = m v²/r"],
+    dontUseWhen: ["r is actually a diameter", "You need the TOTAL acceleration and the speed is changing — combine with a_t", "ω is in rpm or v is in km/h"],
+    triggers: ["constant speed in a circle", "radius", "centripetal", "toward the center", "rev/min"],
+    onSheet: true,
+  },
+  {
+    id: "a-total-circular",
+    latex: "a = \\sqrt{a_c^2 + a_t^2}",
+    name: "Total acceleration (non-uniform circular motion)",
+    chapter: "Ch 4",
+    variables: [v("a", "total acceleration magnitude", "m/s²"), v("a_c", "centripetal component", "m/s²"), v("a_t", "tangential component (rate of change of speed)", "m/s²")],
+    useWhen: ["Object moves on a circle AND its speed is changing (braking in a turn, speeding up on a track)"],
+    dontUseWhen: ["Speed is constant — then a_t = 0 and a = a_c", "The path is straight — then a_c = 0"],
+    triggers: ["slowing down while turning", "speeding up around", "total acceleration", "U-turn", "brakes"],
+    onSheet: true,
+  },
+
+  // ================= Newton's laws (Ch 5) =================
+  {
+    id: "newton-2",
+    latex: "\\sum \\vec F = m\\vec a \\quad\\Rightarrow\\quad \\sum F_x = m a_x,\\ \\sum F_y = m a_y",
+    name: "Newton's second law (components)",
+    chapter: "Ch 5",
+    variables: [v("\\sum F", "net force", "N"), v("m", "mass", "kg"), v("a", "acceleration", "m/s²")],
+    useWhen: ["Always the starting point for any force problem: draw the free-body diagram, pick axes, write ΣF = ma per axis", "Equilibrium is the special case a = 0"],
+    dontUseWhen: ["You plug in mass where a force (weight = mg) belongs", "You forget a force on the free-body diagram (normal, friction, tension)"],
+    triggers: ["net force", "acceleration of the block", "free-body", "pushed", "pulled"],
+    onSheet: true,
+  },
+  {
+    id: "weight",
+    latex: "W = mg",
+    name: "Weight",
+    chapter: "Ch 5",
+    variables: [v("W", "weight (gravitational force)", "N"), v("m", "mass", "kg"), v("g", "9.80 m/s²", "m/s²")],
+    useWhen: ["Any free-body diagram near Earth's surface — gravity acts straight down with magnitude mg"],
+    dontUseWhen: ["Far from the surface (use GMm/r²)", "You need the normal force — N is not always mg"],
+    triggers: ["weight", "mass of", "kg", "gravity"],
+    onSheet: true,
+  },
+  {
+    id: "friction-static",
+    latex: "f_s \\le \\mu_s N",
+    name: "Static friction (maximum)",
+    chapter: "Ch 5",
+    variables: [v("f_s", "static friction force", "N"), v("\\mu_s", "coefficient of static friction", "—"), v("N", "normal force", "N")],
+    useWhen: ["Object is at rest and you want to know if it will start moving (compare the needed force to μ_s N)", "\"About to slip\" / \"maximum speed without skidding\" — then f_s = μ_s N exactly"],
+    dontUseWhen: ["The object is already sliding (use μ_k)", "Static friction is simply balancing a smaller force — then f_s equals that force, not μ_s N"],
+    triggers: ["at rest", "about to slip", "maximum speed", "does it move", "minimum coefficient"],
+    onSheet: true,
+  },
+  {
+    id: "friction-kinetic",
+    latex: "f_k = \\mu_k N",
+    name: "Kinetic friction",
+    chapter: "Ch 5",
+    variables: [v("f_k", "kinetic friction force", "N"), v("\\mu_k", "coefficient of kinetic friction", "—"), v("N", "normal force", "N")],
+    useWhen: ["Object is sliding; friction opposes the relative motion"],
+    dontUseWhen: ["Object is at rest (check static first)", "N was assumed to be mg on an incline or with an angled force"],
+    triggers: ["slides", "sliding", "moving across", "μ_k"],
+    onSheet: true,
+  },
+  {
+    id: "hooke",
+    latex: "F_s = -k x",
+    name: "Hooke's law",
+    chapter: "Ch 5",
+    variables: [v("F_s", "spring force", "N"), v("k", "spring constant", "N/m"), v("x", "stretch or compression from natural length", "m")],
+    useWhen: ["A spring holds or pushes something; x is the displacement from the unstretched length", "Finding k from a known force and stretch"],
+    dontUseWhen: ["x is given in cm (convert to m)", "x is the total spring length rather than the stretch"],
+    triggers: ["spring", "stretched by", "compressed", "spring constant", "N/m"],
+    onSheet: true,
+  },
+
+  // ================= Circular dynamics (Ch 6) =================
+  {
+    id: "sum-fc",
+    latex: "\\sum F_c = \\frac{m v^2}{r}",
+    name: "Net centripetal force",
+    chapter: "Ch 6",
+    variables: [v("\\sum F_c", "net force toward the center", "N"), v("m", "mass", "kg"), v("v", "speed", "m/s"), v("r", "radius", "m")],
+    useWhen: ["Any object moving in a circle: the sum of the radial force components (friction, tension, N, mg, …) must equal mv²/r", "Loops, curves, Ferris wheels, conical pendulums, orbits"],
+    dontUseWhen: ["You treat mv²/r as an extra outward force — it is the net force, not a force on the diagram", "The path isn't circular"],
+    triggers: ["curve", "loop", "circle", "Ferris wheel", "turns", "orbit"],
+    onSheet: true,
+  },
+  {
+    id: "vmax-flat-curve",
+    latex: "v_{\\max} = \\sqrt{\\mu_s g r}",
+    name: "Max speed on a flat curve (derived)",
+    chapter: "Ch 6",
+    variables: [v("v_{\\max}", "fastest speed without skidding", "m/s"), v("\\mu_s", "coefficient of static friction", "—"), v("g", "9.80 m/s²", "m/s²"), v("r", "radius of curve", "m")],
+    useWhen: ["Unbanked (flat) curve, friction supplies the centripetal force, car about to skid"],
+    dontUseWhen: ["The curve is banked", "The car is below the max speed (then friction is less than μ_s N)", "You expect the mass to matter — it cancels"],
+    triggers: ["flat curve", "unbanked", "maximum speed", "without skidding", "wet road"],
+    onSheet: false,
+    derivedFrom: ["sum-fc", "friction-static", "newton-2"],
+  },
+  {
+    id: "banked-angle",
+    latex: "\\tan\\theta = \\frac{v^2}{r g}",
+    name: "Banked curve, no friction (derived)",
+    chapter: "Ch 6",
+    variables: [v("\\theta", "bank angle", "°"), v("v", "design speed", "m/s"), v("r", "radius", "m"), v("g", "9.80 m/s²", "m/s²")],
+    useWhen: ["Frictionless banked curve: only N and mg act, and the horizontal part of N provides mv²/r"],
+    dontUseWhen: ["Friction is present (then it's a two-equation problem)", "You expect mass to matter — it cancels"],
+    triggers: ["banked", "no friction", "ideal bank angle", "design speed"],
+    onSheet: false,
+    derivedFrom: ["sum-fc", "newton-2"],
+  },
+
+  // ================= Gravitation (Ch 13) =================
+  {
+    id: "grav-force",
+    latex: "F = \\frac{G m_1 m_2}{r^2}",
+    name: "Universal gravitation",
+    chapter: "Ch 13",
+    variables: [v("F", "gravitational force", "N"), v("G", "6.674 × 10⁻¹¹ N·m²/kg²", "N·m²/kg²"), v("m_1, m_2", "the two masses", "kg"), v("r", "center-to-center distance", "m")],
+    useWhen: ["Force between two masses; ratio questions (distance doubled → force ÷ 4)"],
+    dontUseWhen: ["r is measured from the surface instead of the center", "You scale with 1/r instead of 1/r²"],
+    triggers: ["gravitational force between", "distance is doubled", "two masses"],
+    onSheet: true,
+  },
+  {
+    id: "g-altitude",
+    latex: "g = \\frac{G M}{r^2}",
+    name: "Gravitational field / g at distance r",
+    chapter: "Ch 13",
+    variables: [v("g", "gravitational acceleration", "m/s²"), v("G", "gravitational constant", "N·m²/kg²"), v("M", "mass of the planet", "kg"), v("r", "distance from the planet's center (R + h)", "m")],
+    useWhen: ["g or weight at altitude h: r = R_E + h", "g on another planet"],
+    dontUseWhen: ["You use h alone as r", "You forget to square r"],
+    triggers: ["altitude", "above the surface", "ISS", "weight at a height"],
+    onSheet: true,
+  },
+  {
+    id: "v-orbit",
+    latex: "v = \\sqrt{\\frac{G M}{r}}",
+    name: "Orbital speed",
+    chapter: "Ch 13",
+    variables: [v("v", "orbital speed", "m/s"), v("M", "central mass", "kg"), v("r", "orbit radius (from center)", "m")],
+    useWhen: ["Circular orbit: gravity is the centripetal force (GMm/r² = mv²/r)"],
+    dontUseWhen: ["r = altitude only", "You think the satellite's mass matters — it cancels"],
+    triggers: ["orbital speed", "satellite", "circular orbit", "speed of the ISS"],
+    onSheet: false,
+    derivedFrom: ["grav-force", "sum-fc"],
+  },
+  {
+    id: "T-orbit",
+    latex: "T = 2\\pi\\sqrt{\\frac{r^3}{G M}}",
+    name: "Orbital period (Kepler's 3rd law)",
+    chapter: "Ch 13",
+    variables: [v("T", "orbital period", "s"), v("r", "orbit radius", "m"), v("M", "central mass", "kg")],
+    useWhen: ["Period of a circular orbit; finding a planet's mass from a moon's T and r"],
+    dontUseWhen: ["T is given in days/hours without converting to seconds", "r is the altitude only"],
+    triggers: ["period of the orbit", "mass of the planet", "moon orbits every"],
+    onSheet: false,
+    derivedFrom: ["v-orbit", "v-2pir-over-T"],
+  },
+
+  // ================= Work (Ch 7) =================
+  {
+    id: "work-const",
+    latex: "W = F d \\cos\\theta",
+    name: "Work by a constant force",
+    chapter: "Ch 7",
+    variables: [v("W", "work", "J"), v("F", "force magnitude", "N"), v("d", "displacement magnitude", "m"), v("\\theta", "angle between F and d", "°")],
+    useWhen: ["Constant force, straight-line displacement", "Force perpendicular to motion → W = 0 (normal force, gravity on a horizontal floor)"],
+    dontUseWhen: ["The force varies with position (use the area / integral)", "θ is measured from the vertical instead of from the displacement"],
+    triggers: ["pulls at an angle", "work done by", "constant force", "drags"],
+    onSheet: true,
+  },
+  {
+    id: "work-integral",
+    latex: "W = \\int_{x_i}^{x_f} F_x\\,dx",
+    name: "Work by a varying force",
+    chapter: "Ch 7",
+    variables: [v("W", "work", "J"), v("F_x", "force as a function of x", "N"), v("x_i, x_f", "start and end positions", "m")],
+    useWhen: ["F is given as a function of x (F = ax², F = −2/x, …)", "F–x graph: work = signed area under the curve"],
+    dontUseWhen: ["Force is constant (then it's just F d cos θ)", "You multiply one value of F by the total distance"],
+    triggers: ["F(x) =", "varies with position", "graph of F versus x", "area under"],
+    onSheet: true,
+  },
+  {
+    id: "work-spring",
+    latex: "W_s = \\tfrac{1}{2} k x_i^2 - \\tfrac{1}{2} k x_f^2",
+    name: "Work done by a spring",
+    chapter: "Ch 7",
+    variables: [v("W_s", "work done BY the spring", "J"), v("k", "spring constant", "N/m"), v("x_i, x_f", "initial/final stretch from natural length", "m")],
+    useWhen: ["A spring stretches or relaxes between two displacements"],
+    dontUseWhen: ["You want work done ON the spring (opposite sign)", "x is measured from somewhere other than the natural length"],
+    triggers: ["work done by the spring", "spring compressed from", "released"],
+    onSheet: true,
+    derivedFrom: ["work-integral", "hooke"],
+  },
+  {
+    id: "kinetic-energy",
+    latex: "K = \\tfrac{1}{2} m v^2",
+    name: "Kinetic energy",
+    chapter: "Ch 7",
+    variables: [v("K", "kinetic energy", "J"), v("m", "mass", "kg"), v("v", "speed", "m/s")],
+    useWhen: ["Any time speed and energy are linked"],
+    dontUseWhen: ["You forget the square (doubling v quadruples K)"],
+    triggers: ["kinetic energy", "speed", "moving at"],
+    onSheet: true,
+  },
+  {
+    id: "work-energy",
+    latex: "W_{\\text{net}} = \\Delta K = \\tfrac{1}{2} m v_f^2 - \\tfrac{1}{2} m v_i^2",
+    name: "Work–energy theorem",
+    chapter: "Ch 7",
+    variables: [v("W_{\\text{net}}", "net work by ALL forces", "J"), v("\\Delta K", "change in kinetic energy", "J")],
+    useWhen: ["Find a final speed from the work done (including by a varying force)", "No time given, force may vary — energy beats kinematics"],
+    dontUseWhen: ["You only include one force's work when others (friction, gravity) also do work", "You want time (energy methods never give time)"],
+    triggers: ["final speed", "how fast after", "work done on", "starts from rest"],
+    onSheet: true,
+  },
+];
+
+export const EQUATION_IDS = new Set(EQUATIONS.map((e) => e.id));
+
+export function equationById(id: EquationId): Equation | undefined {
+  return EQUATIONS.find((e) => e.id === id);
+}
+
+export const CHAPTER_ORDER = ["Ch 1", "Ch 2", "Ch 3", "Ch 4", "Ch 5", "Ch 6", "Ch 13", "Ch 7"];
+
+export function equationsByChapter(): { chapter: string; equations: Equation[] }[] {
+  const chapters = Array.from(new Set(EQUATIONS.map((e) => e.chapter)));
+  chapters.sort((a, b) => CHAPTER_ORDER.indexOf(a) - CHAPTER_ORDER.indexOf(b));
+  return chapters.map((chapter) => ({ chapter, equations: EQUATIONS.filter((e) => e.chapter === chapter) }));
+}

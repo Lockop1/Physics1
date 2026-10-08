@@ -1,0 +1,17 @@
+# dependencies / build
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# source material — never commit (repo is public)
+source-material/
+lectures/
+
+# editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.log
+npm-debug.log*
