@@ -185,6 +185,37 @@ work" graph reading, and a sliding-to-a-stop W–E template.
 
 **Next smallest safe task**: Session 5 (exam simulation + weak spots).
 
+## Session 5 — Exam simulation + weak-spot drill + Home polish ✅
+
+**Done**
+- `src/engine/exam.ts`: `buildExam(seed, {exam, count})` — pure and
+  deterministic from the exam seed; uniform over templates (so topics are
+  weighted by template count), ~25 % conceptual, no repeated template unless
+  the pool is smaller than the request, "mixed" weights Exam 2 ≈ 70 %.
+  Exam 1 currently falls back to Exam 2 templates until Session 6 lands.
+- Exam pages: setup (exam / count default 20 / timer default 75 min,
+  editable, on-off), run (MCQ only, no hints, no feedback, question
+  navigator, sticky timer with auto-submit at 0, keys 1–5 / N / P, confirm on
+  unanswered), results (score, per-topic bars, named mistakes with counts +
+  explanations + Drill buttons, expandable review of every question with the
+  full solution and a "same type, new numbers" link). History list on the
+  setup page.
+- storage v3: `exams[]` (last 50) with additive migration; exam answers also
+  feed per-template and per-error stats.
+- `selection.ts`: `weakSpotWeight()` = low recent accuracy + staleness +
+  share of the student's committed errors that the template exercises
+  (`errorsProducedBy()` samples a template's distractors). `/drill/weak` and
+  `/drill/error/:id`; "Next" keeps drilling.
+- Home: Continue, Random Exam 2 question (weak-weighted), Detective, Exam
+  sim, Weak spots; "Your top traps" (3 most-committed errors with Drill);
+  exam history card; per-chapter mastery; overall attempts + Exam 2 mastery.
+- Tests: 386. Exam builder (no dupes, 5/20 conceptual, deterministic, all
+  questions buildable with one correct choice, topic weighting), weak-spot
+  weight ordering, error→template lookup, v2→v3 migration + exam recording.
+- Verified in headless Chromium: 8-question timed exam end to end.
+
+**Next smallest safe task**: Session 6 (Exam 1 material).
+
 ## Session 3 — Ch 6 / 13 / 7 ⏳
 ## Session 4 — Equation Detective ⏳
 ## Session 5 — Exam sim + weak spots ⏳

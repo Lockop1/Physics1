@@ -5,7 +5,7 @@
  */
 
 export const STORAGE_KEY = "phys1-trainer:v1";
-export const STORAGE_VERSION = 2;
+export const STORAGE_VERSION = 3;
 
 export interface TemplateStats {
   attempts: number;
@@ -43,6 +43,20 @@ export interface DetectiveData {
   flashcards: Record<string, FlashcardStats>;
 }
 
+export interface ExamRecord {
+  id: string; // "<examSeed>-<timestamp>"
+  examSeed: number;
+  exam: "exam2" | "exam1" | "mixed";
+  count: number;
+  /** Timer length in seconds (0 = untimed). */
+  timerSec: number;
+  startedAt: number;
+  finishedAt: number;
+  score: number;
+  /** Per question: template id, seed, chosen choice index (−1 = blank), correct. */
+  items: { templateId: string; seed: number; picked: number; correct: boolean; errorId?: string }[];
+}
+
 export interface ProgressData {
   version: number;
   templates: Record<string, TemplateStats>;
@@ -54,6 +68,8 @@ export interface ProgressData {
   lastQuestion?: string;
   /** Added in v2. */
   detective: DetectiveData;
+  /** Added in v3: exam simulation history, newest last. */
+  exams: ExamRecord[];
 }
 
 export function emptyDetective(): DetectiveData {
@@ -74,6 +90,7 @@ export function emptyProgress(): ProgressData {
     equations: {},
     settings: { ...DEFAULT_SETTINGS },
     detective: emptyDetective(),
+    exams: [],
   };
 }
 
@@ -129,6 +146,7 @@ export function save(data: ProgressData): boolean {
  * Validate/migrate parsed JSON into the current shape. Returns null if hopeless.
  * Migrations are additive — old data is never wiped.
  *   v1 → v2: adds the `detective` block (modes / traps / flashcards).
+ *   v2 → v3: adds `exams` (exam simulation history).
  */
 export function migrate(raw: unknown): ProgressData | null {
   if (!raw || typeof raw !== "object") return null;
@@ -147,6 +165,7 @@ export function migrate(raw: unknown): ProgressData | null {
       traps: isRecord(det.traps) ? (det.traps as Record<string, EquationStats>) : {},
       flashcards: isRecord(det.flashcards) ? (det.flashcards as Record<string, FlashcardStats>) : {},
     },
+    exams: Array.isArray(r.exams) ? (r.exams as ExamRecord[]) : [],
   };
 }
 
@@ -213,6 +232,31 @@ export function recordFlashcard(cardId: string, knewIt: boolean): void {
 
 export function getDetective(): DetectiveData {
   return load().detective;
+}
+
+export function recordExam(rec: ExamRecord): void {
+  const data = load();
+  data.exams = [...data.exams, rec].slice(-50);
+  // Exam answers also count toward per-template and per-error stats.
+  for (const it of rec.items) {
+    const prev = data.templates[it.templateId] ?? { attempts: 0, correct: 0, recent: [], lastSeen: 0 };
+    data.templates[it.templateId] = {
+      attempts: prev.attempts + 1,
+      correct: prev.correct + (it.correct ? 1 : 0),
+      recent: [...prev.recent, it.correct].slice(-10),
+      lastSeen: rec.finishedAt,
+    };
+    if (it.errorId) data.errors[it.errorId] = (data.errors[it.errorId] ?? 0) + 1;
+  }
+  save(data);
+}
+
+export function getExams(): ExamRecord[] {
+  return load().exams;
+}
+
+export function getErrorCounts(): Record<string, number> {
+  return load().errors;
 }
 
 export function getSettings(): Settings {

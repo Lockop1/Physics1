@@ -12,6 +12,9 @@ import { DetectiveRecipePage } from "./pages/DetectiveRecipe";
 import { DetectiveTrapPage } from "./pages/DetectiveTrap";
 import { FlashcardsPage } from "./pages/Flashcards";
 import { PracticeByEquationPage } from "./pages/PracticeByEquation";
+import { ExamSetupPage, ExamRunPage, ExamResultsPage } from "./pages/Exam";
+import { DrillPage } from "./pages/Drill";
+import { RandomExam2Page } from "./pages/RandomExam2";
 import { useTheme } from "./lib/theme";
 
 export function App() {
@@ -27,6 +30,12 @@ export function App() {
           <Route path="/practice/:topicId" element={<PracticePage />} />
           <Route path="/equations" element={<EquationSheetPage />} />
           <Route path="/practice-eq/:equationId" element={<PracticeByEquationPage />} />
+          <Route path="/practice-exam2" element={<RandomExam2Page />} />
+          <Route path="/exam" element={<ExamSetupPage />} />
+          <Route path="/exam/run/:examSeed" element={<ExamRunPage />} />
+          <Route path="/exam/results/:recordId" element={<ExamResultsPage />} />
+          <Route path="/drill/weak" element={<DrillPage />} />
+          <Route path="/drill/error/:errorId" element={<DrillPage />} />
           <Route path="/detective" element={<DetectivePage />} />
           <Route path="/detective/pick" element={<DetectivePickPage />} />
           <Route path="/detective/pick/:templateId/:seed" element={<DetectivePickPage />} />

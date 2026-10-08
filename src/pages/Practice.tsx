@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { buildQuestion, nextForTopic } from "../lib/question";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { buildQuestion, nextForTopic, nextWeakSpot, nextForError } from "../lib/question";
 import { templateById } from "../content/templates";
 import { topicById } from "../content/topics";
 import { errorById } from "../content/errors";
@@ -54,6 +54,8 @@ function partsOf(q: GeneratedQuestion): QuestionPart[] {
 
 function Question({ templateId, seed }: { templateId: string; seed: number }) {
   const navigate = useNavigate();
+  const [search] = useSearchParams();
+  const drill = search.get("drill"); // "weak" | "error:<id>" | null
   const template = templateById(templateId);
   const q = useMemo(() => buildQuestion(templateId, seed), [templateId, seed]);
   const parts = useMemo(() => (q ? partsOf(q) : []), [q]);
@@ -109,9 +111,16 @@ function Question({ templateId, seed }: { templateId: string; seed: number }) {
 
   const next = useCallback(() => {
     if (!template) return;
+    if (drill) {
+      const pick = drill.startsWith("error:") ? nextForError(drill.slice(6)) : nextWeakSpot();
+      if (pick) {
+        navigate(`/q/${pick.template.id}/${pick.seed}?drill=${drill}`);
+        return;
+      }
+    }
     const pick = nextForTopic(template.topicId);
     if (pick) navigate(`/q/${pick.template.id}/${pick.seed}`);
-  }, [template, navigate]);
+  }, [template, navigate, drill]);
   const sameType = useCallback(() => navigate(`/q/${templateId}/${randomSeed()}`), [templateId, navigate]);
 
   // keyboard shortcuts

@@ -113,7 +113,7 @@ describe("storage v1 → v2 migration", () => {
       lastQuestion: "ch4.ucm.ac-rpm/55",
     };
     const m = storage.migrate(v1)!;
-    expect(m.version).toBe(2);
+    expect(m.version).toBe(storage.STORAGE_VERSION);
     expect(m.templates["ch4.ucm.ac-rpm"]!.attempts).toBe(3);
     expect(m.errors["forgot-square"]).toBe(2);
     expect(m.equations["ac-v2-over-r"]!.correct).toBe(3);
