@@ -11,6 +11,7 @@ export function Layout() {
           <NavLink to="/" end>
             Practice
           </NavLink>
+          <NavLink to="/detective">Detective</NavLink>
           <NavLink to="/equations">Equations</NavLink>
           <NavLink to="/settings">Settings</NavLink>
         </nav>

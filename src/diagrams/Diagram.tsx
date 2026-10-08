@@ -8,8 +8,21 @@ import { VerticalBoxDiagram } from "./VerticalBoxDiagram";
 import { LoopDiagram, FlatCurveDiagram, BankedDiagram, ConicalDiagram, OrbitDiagram } from "./CircularDynamicsDiagrams";
 import { WorkAngleDiagram, WorkRankDiagram, FxGraphDiagram } from "./WorkDiagrams";
 
-/** Dispatch a DiagramSpec to its SVG component. */
-export function Diagram({ spec }: { spec: DiagramSpec }) {
+/** Replace numbers in every string prop (labels, captions) with a blank box. */
+function scrub<T>(v: T): T {
+  if (typeof v === "string") return v.replace(/-?\d+(?:\.\d+)?(?:e-?\d+)?/g, "▢") as unknown as T;
+  if (Array.isArray(v)) return v.map(scrub) as unknown as T;
+  if (v && typeof v === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, val] of Object.entries(v as Record<string, unknown>)) out[k] = k === "kind" ? val : scrub(val);
+    return out as T;
+  }
+  return v;
+}
+
+/** Dispatch a DiagramSpec to its SVG component. `hideNumbers` blanks numeric labels (geometry stays to scale). */
+export function Diagram({ spec: raw, hideNumbers = false }: { spec: DiagramSpec; hideNumbers?: boolean }) {
+  const spec: DiagramSpec = hideNumbers ? { ...scrub(raw), hideNumbers: true } : raw;
   switch (spec.kind) {
     case "circle":
       return <CircleDiagram spec={spec} />;

@@ -47,7 +47,7 @@ export function InclineDiagram({ spec }: { spec: InclineDiagramSpec }) {
       <polygon points={`${x0},${y0} ${x1},${y0} ${x1},${y1}`} fill="none" stroke={C.stroke} strokeWidth={2} />
       {ticks}
       <AngleArc cx={x0} cy={y0} r={30} startDeg={0} endDeg={th} />
-      <Label x={x0 + 44} y={y0 + 14} size={12} anchor="start">{`θ = ${spec.angleDeg}°`}</Label>
+      <Label x={x0 + 44} y={y0 + 14} size={12} anchor="start">{spec.hideNumbers ? "θ" : `θ = ${spec.angleDeg}°`}</Label>
       <g transform={`rotate(${rot} ${cx} ${cy})`}>
         <rect x={cx - bw / 2} y={cy - bh / 2} width={bw} height={bh} fill={C.fill} stroke={C.stroke} strokeWidth={2} />
         {spec.massLabel && (

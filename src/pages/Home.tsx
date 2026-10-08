@@ -52,6 +52,9 @@ export function HomePage() {
             <Link className="btn primary" to="/practice/ch4.ucm">
               Random Ch 4 question
             </Link>
+            <Link className="btn" to="/detective">
+              Equation Detective
+            </Link>
             {last && (
               <Link className="btn" to={`/q/${last}`}>
                 Continue last question

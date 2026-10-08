@@ -2,7 +2,12 @@
  * Discriminated union of every diagram the renderer knows how to draw.
  * Templates emit one of these; src/diagrams/Diagram.tsx dispatches on `kind`.
  */
-export type DiagramSpec =
+/** Set by the Diagram component when the detective "hide numbers" toggle is on. */
+export interface HideFlag {
+  hideNumbers?: boolean;
+}
+
+export type DiagramSpec = (
   | CircleDiagramSpec
   | BlockForceDiagramSpec
   | InclineDiagramSpec
@@ -16,10 +21,12 @@ export type DiagramSpec =
   | OrbitDiagramSpec
   | WorkAngleDiagramSpec
   | WorkRankDiagramSpec
-  | FxGraphDiagramSpec;
+  | FxGraphDiagramSpec
+) &
+  HideFlag;
 
 /** Vertical circle (loop / Ferris wheel) with a marked point and its forces. */
-export interface LoopDiagramSpec {
+export interface LoopDiagramSpec extends HideFlag {
   kind: "loop";
   point: "top" | "bottom" | "both";
   radiusLabel?: string;
@@ -32,14 +39,14 @@ export interface LoopDiagramSpec {
 }
 
 /** Overhead view of a car on a flat curve. */
-export interface FlatCurveDiagramSpec {
+export interface FlatCurveDiagramSpec extends HideFlag {
   kind: "flat-curve";
   radiusLabel?: string;
   caption?: string;
 }
 
 /** Cross-section of a banked road with a car. */
-export interface BankedDiagramSpec {
+export interface BankedDiagramSpec extends HideFlag {
   kind: "banked";
   angleDeg: number;
   showForces?: boolean;
@@ -47,7 +54,7 @@ export interface BankedDiagramSpec {
 }
 
 /** Conical pendulum: string at angle from the vertical. */
-export interface ConicalDiagramSpec {
+export interface ConicalDiagramSpec extends HideFlag {
   kind: "conical";
   angleDeg: number; // from vertical
   /** Label the angle as measured from the horizontal instead. */
@@ -58,7 +65,7 @@ export interface ConicalDiagramSpec {
 }
 
 /** Planet with a satellite orbit at altitude h. */
-export interface OrbitDiagramSpec {
+export interface OrbitDiagramSpec extends HideFlag {
   kind: "orbit";
   altitudeLabel?: string;
   radiusLabel?: string;
@@ -67,7 +74,7 @@ export interface OrbitDiagramSpec {
 }
 
 /** A force at angle θ to a displacement. */
-export interface WorkAngleDiagramSpec {
+export interface WorkAngleDiagramSpec extends HideFlag {
   kind: "work-angle";
   angleDeg: number; // angle between F and d (0–180)
   forceLabel?: string;
@@ -75,13 +82,13 @@ export interface WorkAngleDiagramSpec {
 }
 
 /** Four labelled panels with a force at different angles to a rightward displacement. */
-export interface WorkRankDiagramSpec {
+export interface WorkRankDiagramSpec extends HideFlag {
   kind: "work-rank";
   panels: { label: string; angleDeg: number }[];
 }
 
 /** Piecewise-linear F–x graph with a highlighted interval. */
-export interface FxGraphDiagramSpec {
+export interface FxGraphDiagramSpec extends HideFlag {
   kind: "fx-graph";
   points: { x: number; F: number }[];
   from?: number;
@@ -99,7 +106,7 @@ export interface ForceArrow {
 }
 
 /** Block on a flat surface with one or more applied forces. */
-export interface BlockForceDiagramSpec {
+export interface BlockForceDiagramSpec extends HideFlag {
   kind: "block-force";
   forces: ForceArrow[];
   /** Draw a rough-surface hatch and label μ. */
@@ -111,7 +118,7 @@ export interface BlockForceDiagramSpec {
 }
 
 /** Block on an incline, angle drawn to scale. */
-export interface InclineDiagramSpec {
+export interface InclineDiagramSpec extends HideFlag {
   kind: "incline";
   angleDeg: number;
   /** Spring attached from the block to the top of the incline. */
@@ -126,7 +133,7 @@ export interface InclineDiagramSpec {
 }
 
 /** Block on a table, rope over a pulley at the edge, hanging mass. */
-export interface PulleyDiagramSpec {
+export interface PulleyDiagramSpec extends HideFlag {
   kind: "pulley";
   m1Label: string;
   m2Label: string;
@@ -139,7 +146,7 @@ export interface PulleyDiagramSpec {
 }
 
 /** Object hanging from two cables. Angles are measured from the horizontal (ceiling). */
-export interface CablesDiagramSpec {
+export interface CablesDiagramSpec extends HideFlag {
   kind: "cables";
   leftAngleDeg: number; // from horizontal; 0 = horizontal cable
   rightAngleDeg: number;
@@ -152,7 +159,7 @@ export interface CablesDiagramSpec {
 }
 
 /** A box with vertical forces: hanging from a rope, standing in an elevator, or pushed up. */
-export interface VerticalBoxDiagramSpec {
+export interface VerticalBoxDiagramSpec extends HideFlag {
   kind: "vertical-box";
   mode: "hanging" | "elevator" | "pushed-up";
   accel?: "up" | "down" | "none";
@@ -161,7 +168,7 @@ export interface VerticalBoxDiagramSpec {
   caption?: string;
 }
 
-export interface CircleDiagramSpec {
+export interface CircleDiagramSpec extends HideFlag {
   kind: "circle";
   /** Label for the radius line, e.g. "r = 10.0 cm" or "d = 200 m". */
   radiusLabel?: string;

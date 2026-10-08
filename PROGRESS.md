@@ -144,6 +144,47 @@ work" graph reading, and a sliding-to-a-stop W–E template.
 
 **Next smallest safe task**: Session 4 (Equation Detective).
 
+## Session 4 — Equation Detective ✅
+
+**Done**
+- `src/engine/detective.ts`: decoy selection (same chapter first, never a
+  correct equation), set-equality grading with missing/extra lists, number
+  hiding for prompts (keeps exponents/subscripts), givens tagging setup +
+  grading (irrelevant-given recognition counted separately), recipe shuffle +
+  ordering grade.
+- Mode A "Pick the equations" (`/detective/pick/:templateId/:seed`): any
+  template, hide-numbers toggle (prompt AND diagram labels), 6–8 options, keys
+  1–8 / ↵ / N, wrong picks explained with the decoy's `dontUseWhen`, missed
+  ones with `useWhen`, then recipe + equations in order, link to solve with
+  numbers.
+- Mode B "Givens & target": tag each number with a symbol or "not needed",
+  pick the unknown, graded, then flows into mode A for the same question.
+- Mode C "Build the recipe": shuffled plan, drag-and-drop (desktop) or ▲▼
+  (mobile), graded with the first wrong position. Only templates with ≥ 3
+  recipe steps are served.
+- Mode D "Spot the trap": 33 hand-written scenarios in
+  `src/content/detective/traps.ts` covering every case in the spec (N ≠ mg
+  ×6 incl. Ferris vs loop, constant-a kinematics ×2, varying force ×2,
+  perpendicular work ×2, static vs kinetic ×3, radius/diameter, rpm, s = rθ,
+  R_E + h, orbit mass, ratio 1/r², banked/flat mass independence, tension
+  accelerating ×2, Hooke x, W angle reference ×2, net work, power seconds,
+  conical angle, v_min, third-law pairs). Weighted toward misses.
+- Situation flashcards: 28 hand-written situation cards + one per equation
+  from its triggers; flip, knew-it / didn't, weighted toward misses and
+  unseen cards.
+- Equation Sheet upgrade: search (name, triggers, use/don't-use, variables),
+  chapter filter, derived-from chain links, per-equation detective accuracy
+  ("you pick this correctly 4/7"), "Practice problems (n)" button →
+  `/practice-eq/:id` launches a template that uses the equation.
+- storage v2: adds `detective.{modes,traps,flashcards}`; `migrate()` is
+  additive (v1 fixture test keeps templates / errors / equations / settings).
+- Tests: 380. Decoy ∩ correct = ∅ for every template × 50 seeds; grading;
+  hideNumbers; trap/flashcard content integrity; v1 → v2 migration.
+- Verified in headless Chromium: all five modes + sheet search + practice
+  button, phone and desktop, light and dark, no console errors.
+
+**Next smallest safe task**: Session 5 (exam simulation + weak spots).
+
 ## Session 3 — Ch 6 / 13 / 7 ⏳
 ## Session 4 — Equation Detective ⏳
 ## Session 5 — Exam sim + weak spots ⏳

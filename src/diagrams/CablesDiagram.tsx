@@ -29,8 +29,9 @@ export function CablesDiagram({ spec }: { spec: CablesDiagramSpec }) {
   };
   const L = clamp(leftEnd);
   const R = clamp(rightEnd);
-  const leftLabelDeg = spec.anglesFromVertical ? 90 - spec.leftAngleDeg : spec.leftAngleDeg;
-  const rightLabelDeg = spec.anglesFromVertical ? 90 - spec.rightAngleDeg : spec.rightAngleDeg;
+  const leftLabelDeg: number | string = spec.hideNumbers ? "θ₁" : spec.anglesFromVertical ? 90 - spec.leftAngleDeg : spec.leftAngleDeg;
+  const rightLabelDeg: number | string = spec.hideNumbers ? "θ₂" : spec.anglesFromVertical ? 90 - spec.rightAngleDeg : spec.rightAngleDeg;
+  const deg = (v: number | string) => (typeof v === "number" ? `${v}°` : v);
   return (
     <Svg w={W} h={H} label="Object hanging from two cables">
       <line x1={10} y1={ceilY} x2={W - 10} y2={ceilY} stroke={C.stroke} strokeWidth={3} />
@@ -49,13 +50,13 @@ export function CablesDiagram({ spec }: { spec: CablesDiagramSpec }) {
       {spec.anglesFromVertical ? (
         <g>
           <line x1={knot.x} y1={knot.y} x2={knot.x} y2={knot.y - 50} stroke={C.muted} strokeDasharray="3 3" />
-          <AngleArc cx={knot.x} cy={knot.y} r={30} startDeg={90} endDeg={90 + leftLabelDeg} label={`${leftLabelDeg}°`} />
-          <AngleArc cx={knot.x} cy={knot.y} r={40} startDeg={90 - rightLabelDeg} endDeg={90} label={`${rightLabelDeg}°`} />
+          <AngleArc cx={knot.x} cy={knot.y} r={30} startDeg={90} endDeg={90 + (spec.anglesFromVertical ? 90 - spec.leftAngleDeg : spec.leftAngleDeg)} label={deg(leftLabelDeg)} />
+          <AngleArc cx={knot.x} cy={knot.y} r={40} startDeg={90 - (spec.anglesFromVertical ? 90 - spec.rightAngleDeg : spec.rightAngleDeg)} endDeg={90} label={deg(rightLabelDeg)} />
         </g>
       ) : (
         <g>
-          {spec.leftAngleDeg >= 3 && <AngleArc cx={L.x} cy={L.y} r={28} startDeg={-spec.leftAngleDeg} endDeg={0} label={`${leftLabelDeg}°`} />}
-          {spec.rightAngleDeg >= 3 && <AngleArc cx={R.x} cy={R.y} r={28} startDeg={180} endDeg={180 + spec.rightAngleDeg} label={`${rightLabelDeg}°`} />}
+          {spec.leftAngleDeg >= 3 && <AngleArc cx={L.x} cy={L.y} r={28} startDeg={-spec.leftAngleDeg} endDeg={0} label={deg(leftLabelDeg)} />}
+          {spec.rightAngleDeg >= 3 && <AngleArc cx={R.x} cy={R.y} r={28} startDeg={180} endDeg={180 + spec.rightAngleDeg} label={deg(rightLabelDeg)} />}
         </g>
       )}
       <Label x={(knot.x + L.x) / 2 - 12} y={(knot.y + L.y) / 2 + 12} size={13}>

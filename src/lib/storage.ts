@@ -5,7 +5,7 @@
  */
 
 export const STORAGE_KEY = "phys1-trainer:v1";
-export const STORAGE_VERSION = 1;
+export const STORAGE_VERSION = 2;
 
 export interface TemplateStats {
   attempts: number;
@@ -28,14 +28,36 @@ export interface Settings {
   theme: "system" | "light" | "dark";
 }
 
+export interface FlashcardStats {
+  seen: number;
+  missed: number;
+  lastSeen: number;
+}
+
+export interface DetectiveData {
+  /** Per mode ("pick" | "givens" | "recipe" | "trap"): attempts / correct. */
+  modes: Record<string, EquationStats>;
+  /** Per trap-scenario id. */
+  traps: Record<string, EquationStats>;
+  /** Per flashcard id. */
+  flashcards: Record<string, FlashcardStats>;
+}
+
 export interface ProgressData {
   version: number;
   templates: Record<string, TemplateStats>;
   errors: Record<string, number>;
+  /** Per equation: detective picks (attempts / correct). */
   equations: Record<string, EquationStats>;
   settings: Settings;
   /** Last question visited: "templateId/seed" */
   lastQuestion?: string;
+  /** Added in v2. */
+  detective: DetectiveData;
+}
+
+export function emptyDetective(): DetectiveData {
+  return { modes: {}, traps: {}, flashcards: {} };
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -51,6 +73,7 @@ export function emptyProgress(): ProgressData {
     errors: {},
     equations: {},
     settings: { ...DEFAULT_SETTINGS },
+    detective: emptyDetective(),
   };
 }
 
@@ -102,12 +125,16 @@ export function save(data: ProgressData): boolean {
   }
 }
 
-/** Validate/migrate parsed JSON into the current shape. Returns null if hopeless. */
+/**
+ * Validate/migrate parsed JSON into the current shape. Returns null if hopeless.
+ * Migrations are additive — old data is never wiped.
+ *   v1 → v2: adds the `detective` block (modes / traps / flashcards).
+ */
 export function migrate(raw: unknown): ProgressData | null {
   if (!raw || typeof raw !== "object") return null;
-  const r = raw as Partial<ProgressData>;
+  const r = raw as Partial<ProgressData> & { detective?: Partial<DetectiveData> };
   const base = emptyProgress();
-  // Future versions: add `if (r.version === 1) {...}` upgrade steps here. Never wipe.
+  const det = isRecord(r.detective) ? (r.detective as Partial<DetectiveData>) : {};
   return {
     version: STORAGE_VERSION,
     templates: isRecord(r.templates) ? (r.templates as Record<string, TemplateStats>) : base.templates,
@@ -115,6 +142,11 @@ export function migrate(raw: unknown): ProgressData | null {
     equations: isRecord(r.equations) ? (r.equations as Record<string, EquationStats>) : base.equations,
     settings: { ...base.settings, ...(isRecord(r.settings) ? (r.settings as Partial<Settings>) : {}) },
     ...(typeof r.lastQuestion === "string" ? { lastQuestion: r.lastQuestion } : {}),
+    detective: {
+      modes: isRecord(det.modes) ? (det.modes as Record<string, EquationStats>) : {},
+      traps: isRecord(det.traps) ? (det.traps as Record<string, EquationStats>) : {},
+      flashcards: isRecord(det.flashcards) ? (det.flashcards as Record<string, FlashcardStats>) : {},
+    },
   };
 }
 
@@ -152,6 +184,35 @@ export function recordEquationPick(equationId: string, correct: boolean): void {
   const prev = data.equations[equationId] ?? { attempts: 0, correct: 0 };
   data.equations[equationId] = { attempts: prev.attempts + 1, correct: prev.correct + (correct ? 1 : 0) };
   save(data);
+}
+
+export function getEquationStats(equationId: string): EquationStats | undefined {
+  return load().equations[equationId];
+}
+
+export function recordDetectiveMode(mode: string, correct: boolean): void {
+  const data = load();
+  const prev = data.detective.modes[mode] ?? { attempts: 0, correct: 0 };
+  data.detective.modes[mode] = { attempts: prev.attempts + 1, correct: prev.correct + (correct ? 1 : 0) };
+  save(data);
+}
+
+export function recordTrap(trapId: string, correct: boolean): void {
+  const data = load();
+  const prev = data.detective.traps[trapId] ?? { attempts: 0, correct: 0 };
+  data.detective.traps[trapId] = { attempts: prev.attempts + 1, correct: prev.correct + (correct ? 1 : 0) };
+  recordDetectiveMode("trap", correct);
+}
+
+export function recordFlashcard(cardId: string, knewIt: boolean): void {
+  const data = load();
+  const prev = data.detective.flashcards[cardId] ?? { seen: 0, missed: 0, lastSeen: 0 };
+  data.detective.flashcards[cardId] = { seen: prev.seen + 1, missed: prev.missed + (knewIt ? 0 : 1), lastSeen: Date.now() };
+  save(data);
+}
+
+export function getDetective(): DetectiveData {
+  return load().detective;
 }
 
 export function getSettings(): Settings {

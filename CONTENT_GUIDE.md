@@ -89,3 +89,38 @@ When the real formula sheet is known, flip `onSheet` flags to match.
 
 Add a `t(...)` entry inside the right chapter in `src/content/topics.ts`.
 Topics with zero templates show as "coming in a later session" on the home page.
+
+## Adding a "spot the trap" scenario (Equation Detective mode D)
+
+Append to `TRAPS` in `src/content/detective/traps.ts`:
+
+```ts
+{
+  id: "unique-kebab-id",
+  topic: "Ch 6",
+  prompt: "Situation where the tempting equation is wrong (inline $…$ ok).",
+  options: ["tempting wrong move", "the right move", "another wrong move"],
+  correct: 1,                       // index into options
+  explanation: "Why the right move is right and the tempting one fails.",
+  equations: ["sum-fc", "vertical-circle"],   // ids from equations.ts
+  errorId: "normal-equals-mg",                // optional, from errors.ts
+},
+```
+
+The test suite checks: ≥ 25 scenarios, unique ids, 3–4 distinct options, valid
+`correct` index, a real explanation, and that every equation / error id exists.
+
+## Adding a situation flashcard
+
+Append to `HAND_WRITTEN` in `src/content/detective/flashcards.ts`:
+`{ id, front: "situation phrase", equationIds: [...], why: "one line" }`.
+One card per equation is also generated automatically from its `triggers`.
+
+## Detective decoys
+
+Mode A decoys are chosen by `selectDecoys()` in `src/engine/detective.ts`:
+never one of the question's own equations, preferring the same chapter, then
+neighbouring chapters. A test asserts `decoys ∩ template.equations = ∅` for
+every template over 50 seeds. If you add an equation that is *always* valid
+alongside another (e.g. a pure rearrangement), list it in the template's
+`equations` so it can't be served as a decoy.

@@ -115,7 +115,7 @@ export function BankedDiagram({ spec }: { spec: BankedDiagramSpec }) {
     <Svg w={W} h={H} label="Banked curve, cross-section">
       <polygon points={`${x0},${y0} ${x1},${y0} ${x1},${y1}`} fill="none" stroke={C.stroke} strokeWidth={2} />
       <AngleArc cx={x0} cy={y0} r={34} startDeg={0} endDeg={th} />
-      <Label x={x0 + 46} y={y0 + 14} size={12} anchor="start">{`θ = ${spec.angleDeg}°`}</Label>
+      <Label x={x0 + 46} y={y0 + 14} size={12} anchor="start">{spec.hideNumbers ? "θ" : `θ = ${spec.angleDeg}°`}</Label>
       <g transform={`rotate(${-th} ${cx} ${cy})`}>
         <rect x={cx - 20} y={cy - 11} width={40} height={22} fill={C.fill} stroke={C.stroke} strokeWidth={2} rx={4} />
       </g>
@@ -161,9 +161,9 @@ export function ConicalDiagram({ spec }: { spec: ConicalDiagramSpec }) {
       <line x1={px} y1={py} x2={bx} y2={by} stroke={C.stroke} strokeWidth={1.8} />
       <circle cx={bx} cy={by} r={8} fill={C.fill} stroke={C.stroke} strokeWidth={2} />
       {spec.fromHorizontal ? (
-        <AngleArc cx={px} cy={py} r={40} startDeg={-(90 - th)} endDeg={0} label={`${90 - spec.angleDeg}°`} />
+        <AngleArc cx={px} cy={py} r={40} startDeg={-(90 - th)} endDeg={0} label={spec.hideNumbers ? "θ" : `${90 - spec.angleDeg}°`} />
       ) : (
-        <AngleArc cx={px} cy={py} r={40} startDeg={-90} endDeg={-(90 - th)} label={`${spec.angleDeg}°`} />
+        <AngleArc cx={px} cy={py} r={40} startDeg={-90} endDeg={-(90 - th)} label={spec.hideNumbers ? "θ" : `${spec.angleDeg}°`} />
       )}
       {spec.fromHorizontal && <line x1={px} y1={py} x2={px + 60} y2={py} stroke={C.muted} strokeDasharray="3 3" />}
       {spec.lengthLabel && (
