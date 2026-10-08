@@ -22,6 +22,8 @@ export type DiagramSpec = (
   | WorkAngleDiagramSpec
   | WorkRankDiagramSpec
   | FxGraphDiagramSpec
+  | VectorsDiagramSpec
+  | ProjectileDiagramSpec
 ) &
   HideFlag;
 
@@ -87,7 +89,7 @@ export interface WorkRankDiagramSpec extends HideFlag {
   panels: { label: string; angleDeg: number }[];
 }
 
-/** Piecewise-linear F–x graph with a highlighted interval. */
+/** Piecewise-linear graph (F–x by default; also used for v–t with custom axis labels) with a highlighted interval. */
 export interface FxGraphDiagramSpec extends HideFlag {
   kind: "fx-graph";
   points: { x: number; F: number }[];
@@ -95,6 +97,44 @@ export interface FxGraphDiagramSpec extends HideFlag {
   to?: number;
   xUnit?: string;
   fUnit?: string;
+  /** Axis labels, default "x" / "F". */
+  xLabel?: string;
+  yLabel?: string;
+}
+
+/** One or more vectors drawn from the origin, with their angles labelled from a stated reference axis. */
+export interface VectorsDiagramSpec extends HideFlag {
+  kind: "vectors";
+  vectors: {
+    label: string;
+    /** magnitude, relative (the diagram normalises) */
+    magnitude: number;
+    /** direction, degrees CCW from +x (math convention) */
+    angleDeg: number;
+    /** How the angle is labelled: from +x (default), from +y, from −y, from −x. */
+    ref?: "+x" | "+y" | "-y" | "-x";
+    /** Angle text to show (e.g. "30°"); omitted → no arc. */
+    angleLabel?: string;
+  }[];
+  /** Draw the resultant (sum) dashed. */
+  showResultant?: boolean;
+  caption?: string;
+}
+
+/** Projectile: launched from a height (0 = level ground) at an angle. */
+export interface ProjectileDiagramSpec extends HideFlag {
+  kind: "projectile";
+  /** Launch height relative to landing level (m, relative; 0 = level ground). */
+  launchHeight: number;
+  /** Launch angle (degrees, positive above horizontal, negative below). */
+  angleDeg: number;
+  /** Label for the angle, e.g. "30°" or "θ"; and whether it's drawn from the vertical. */
+  angleLabel?: string;
+  angleFromVertical?: boolean;
+  speedLabel?: string;
+  heightLabel?: string;
+  rangeLabel?: string;
+  caption?: string;
 }
 
 /** A force arrow applied to a block: angle in degrees, 0 = +x, positive = above horizontal. */

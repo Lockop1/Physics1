@@ -7,6 +7,7 @@ import { CablesDiagram } from "./CablesDiagram";
 import { VerticalBoxDiagram } from "./VerticalBoxDiagram";
 import { LoopDiagram, FlatCurveDiagram, BankedDiagram, ConicalDiagram, OrbitDiagram } from "./CircularDynamicsDiagrams";
 import { WorkAngleDiagram, WorkRankDiagram, FxGraphDiagram } from "./WorkDiagrams";
+import { VectorsDiagram, ProjectileDiagram } from "./KinematicsDiagrams";
 
 /** Replace numbers in every string prop (labels, captions) with a blank box. */
 function scrub<T>(v: T): T {
@@ -52,5 +53,9 @@ export function Diagram({ spec: raw, hideNumbers = false }: { spec: DiagramSpec;
       return <WorkRankDiagram spec={spec} />;
     case "fx-graph":
       return <FxGraphDiagram spec={spec} />;
+    case "vectors":
+      return <VectorsDiagram spec={spec} />;
+    case "projectile":
+      return <ProjectileDiagram spec={spec} />;
   }
 }

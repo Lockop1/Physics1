@@ -83,6 +83,34 @@ import { template as ch7PowerAvg } from "./ch7-work/powerAverage";
 import { template as ch7PowerElevator } from "./ch7-work/powerElevator";
 import { template as ch7Kwh } from "./ch7-work/kwh";
 
+import { template as e1VecComponents } from "./exam1/vectorComponents";
+import { template as e1VecAdd } from "./exam1/vectorAdd";
+import { template as e1VecThree } from "./exam1/vectorResultant";
+import { template as e1VecConcept } from "./exam1/vectorConcept";
+import { template as e1Speed } from "./exam1/speedConversion";
+import { template as e1Density } from "./exam1/densityConversion";
+import { template as e1LAV } from "./exam1/lengthAreaVolume";
+import { template as e1MultiPhase } from "./exam1/multiPhase";
+import { template as e1Stopping } from "./exam1/stoppingDistance";
+import { template as e1Chase } from "./exam1/chase";
+import { template as e1Poly } from "./exam1/positionFunction";
+import { template as e1VecFn } from "./exam1/vectorFunction";
+import { template as e1Turning } from "./exam1/turningPoint";
+import { template as e1VtGraph } from "./exam1/vtGraph";
+import { template as e1GraphConcept } from "./exam1/graphConcept";
+import { template as e1Slope } from "./exam1/accelFromGraph";
+import { template as e1Accel2D } from "./exam1/constantAccel2D";
+import { template as e1Trip } from "./exam1/avgVelocity2D";
+import { template as e1DispVec } from "./exam1/displacementVector";
+import { template as e1Drop } from "./exam1/dropFromHeight";
+import { template as e1ThrownUp } from "./exam1/thrownUp";
+import { template as e1CliffUpDown } from "./exam1/cliffUpDown";
+import { template as e1FreefallConcept } from "./exam1/freefallConcept";
+import { template as e1RangeHeight } from "./exam1/rangeHeight";
+import { template as e1Horizontal } from "./exam1/horizontalLaunch";
+import { template as e1CliffLaunch } from "./exam1/cliffLaunch";
+import { template as e1ProjConcept } from "./exam1/projectileConcept";
+
 export const TEMPLATES: QuestionTemplate[] = [
   ch4RadDeg,
   ch4ArcLength,
@@ -163,6 +191,34 @@ export const TEMPLATES: QuestionTemplate[] = [
   ch7PowerAvg,
   ch7PowerElevator,
   ch7Kwh,
+  // Exam 1
+  e1VecComponents,
+  e1VecAdd,
+  e1VecThree,
+  e1VecConcept,
+  e1Speed,
+  e1Density,
+  e1LAV,
+  e1MultiPhase,
+  e1Stopping,
+  e1Chase,
+  e1Poly,
+  e1VecFn,
+  e1Turning,
+  e1VtGraph,
+  e1GraphConcept,
+  e1Slope,
+  e1Accel2D,
+  e1Trip,
+  e1DispVec,
+  e1Drop,
+  e1ThrownUp,
+  e1CliffUpDown,
+  e1FreefallConcept,
+  e1RangeHeight,
+  e1Horizontal,
+  e1CliffLaunch,
+  e1ProjConcept,
 ];
 
 const byId = new Map(TEMPLATES.map((t) => [t.id, t]));

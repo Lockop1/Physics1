@@ -216,6 +216,59 @@ work" graph reading, and a sliding-to-a-stop W–E template.
 
 **Next smallest safe task**: Session 6 (Exam 1 material).
 
+## Session 6 — Exam 1 material (vectors, units, kinematics, projectiles) ✅
+
+**Source material used**: `lectures/Chapter-1& 2 Units_Measurements_Vectors`,
+`Chapter-3 1D Kinematics`, `Chapter-4 2D Motion`. (The SI Exam 1 review PDF is
+not in the repo; its Q19–Q28 values from CLAUDE.md were already covered in
+Sessions 2–3.)
+
+**Golden values from the slides** (all in `tests/golden/exam1.test.ts`):
+120 km/h → 33.3 m/s; 85.0 mi/h → 137 km/h; 33.0 m/s → 73.8 mi/h; 15.0 in →
+38.1 cm; lead 11.35 g/cm³ → 11 350 kg/m³; C = 12.0 at −60° → (6.00, −10.4);
+(2,2)+(2,−4) → 4.5 at 333°; (3,2)+(−5,4) = (−2,6); #58 train (28.0 m/s,
+50.9 s, 7680 m, 713 m); trooper 31.0 s; #96 Jacob (44.7 s, 184 m, 5.2 m/s);
+#35 x = 10t − 2t²; #27 x = 4 − 2t; Example 3.4; drop 13.5 m (1.66 s, −16.3);
+stone throw (2.04 s, 20.4 m, −29.0 m/s, −22.5 m); Examples 4.3/4.4; plane
+(43 m/s at −21°); #28 boat; boat trip (1.00 × 10⁵ m, 38.9, 27.8, 53.1°);
+#20 bird (8.80 m/s); long jumper (7.94 m, 0.722 m); firework (233 m, 6.90 s);
+#36 crate (1779 m); Waymo (2.02 s, 14.8, 24.8); stone from building (4.22 s,
+35.8 m/s); Kilauea (3.96 s, 31.9 m/s at −50°); #46 agent (54 m < 60 m: no).
+
+**Flags**: the Waymo slide lists t = 2.20 s and θ = 15.3°; with h = 20.0 m
+the fall time is 2.02 s (which is what gives their 14.8 m/s) and the impact
+angle is 53° below horizontal — the slide's two numbers look like typos, so
+the test uses 2.02 s and skips the angle. The Ch 1–2 "resultant of A = 5.00,
+B = 7.00, C = 8.50" and "net force 8754 units" problems depend on figures not
+in the text; skipped.
+
+**Done**
+- 27 Exam 1 templates (every Exam 1 topic has ≥ 3; asserted): vectors ×4
+  (components from +x / +y / −y / −x, add/subtract, three-vector resultant,
+  concepts), units ×3 (speed, density, length/area/volume/time), 1D ×3
+  (multi-phase, stopping, chase with time- or distance head start), calculus
+  ×3 (polynomial x(t), vector r(t)/v(t), turning point & origin crossing),
+  graphs ×3 (generated v–t graph → Δx / distance / v̄ / a, slope reading,
+  concepts), 2D ×3 (constant-a vector motion, two-leg trip, straight flight at
+  an angle), free fall ×4 (drop, thrown up from a building, up-vs-down from a
+  cliff, concepts), projectiles ×4 (level ground R/h/t/v₀ incl. other-planet
+  g, horizontal launch incl. km/h, cliff launch above / below / from-vertical,
+  concepts).
+- Diagrams: vectors from the origin with reference-axis arcs and dashed
+  resultant; projectile trajectory with cliff/table, angle (from horizontal or
+  vertical), range; the graph component now takes axis labels (v–t).
+- 12 new Exam 1 errors (displacement-vs-distance, avg-speed-vs-velocity,
+  derivative-not-taken, slope-vs-area, free-fall-sign, quadratic-wrong-root,
+  head-start-ignored, used-full-speed-as-component, vy-nonzero-at-top,
+  kmh-not-converted, vector-magnitudes-added, angle-from-wrong-axis) and
+  7 equations (avg-velocity, velocity-derivative, graph-slope-area,
+  unit-conversion, density, projectile-components, projectile-range).
+- Tests: 509. v–t displacement AND distance checked against an independent
+  40 000-slice Riemann sum over 300 seeds.
+- Exam sim's "Exam 1" and "mixed" modes now draw real Exam 1 templates.
+
+**Next smallest safe task**: Session 7 (coverage audit of the slides).
+
 ## Session 3 — Ch 6 / 13 / 7 ⏳
 ## Session 4 — Equation Detective ⏳
 ## Session 5 — Exam sim + weak spots ⏳

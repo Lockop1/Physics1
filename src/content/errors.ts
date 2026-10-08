@@ -273,6 +273,20 @@ export const ERRORS: NamedError[] = [
   e("power-forgot-friction", "Left friction out of the lifting force", "At constant speed the cable must supply T = Mg + f (friction opposes the motion), so P = (Mg + f)v. Friction was omitted."),
   e("kwh-units", "Mixed W, kW, and kWh", "Energy in kWh = power in kW × hours. Convert watts to kilowatts (÷1000) before multiplying by hours."),
 
+  // ---------- Exam 1 additions (Session 6) ----------
+  e("displacement-vs-distance", "Displacement and distance confused", "Distance is the total path length (always positive); displacement is final minus initial position (a vector). Going around a loop gives a large distance but zero displacement.", "exam1"),
+  e("avg-speed-vs-velocity", "Average speed and average velocity confused", "Average velocity = displacement / time; average speed = total distance / time. They differ whenever the path doubles back or curves.", "exam1"),
+  e("derivative-not-taken", "Used the position function where its derivative belongs", "Velocity is dx/dt and acceleration is dv/dt. Plugging t into x(t) gives a position, not a velocity.", "exam1"),
+  e("slope-vs-area", "Slope and area swapped on a motion graph", "On a v–t graph the SLOPE is acceleration and the AREA is displacement. On an x–t graph the slope is velocity.", "exam1"),
+  e("free-fall-sign", "Sign of g dropped in free fall", "With up positive, a_y = −9.80 m/s² for the whole flight — rising, at the top, and falling. Using +g (or flipping it at the top) gives the wrong result.", "exam1"),
+  e("quadratic-wrong-root", "Took the wrong root of the quadratic", "Solving y = v₀t − ½gt² gives two times; the negative one is before launch. Keep the positive root (and, for 'returns to the same height', the non-zero one).", "exam1"),
+  e("head-start-ignored", "Ignored the head start in a chase", "The pursued object is already ahead (in distance or in time) when the chase begins. Both positions must be written from the same origin and the same clock.", "exam1"),
+  e("used-full-speed-as-component", "Used the full launch speed as one component", "A projectile launched at angle θ has v₀x = v₀ cos θ and v₀y = v₀ sin θ. The full v₀ was used where a component belongs.", "exam1"),
+  e("vy-nonzero-at-top", "Assumed v_y ≠ 0 (or v = 0) at the top", "At the highest point the VERTICAL velocity is zero while the horizontal velocity v₀ cos θ is unchanged. The total velocity there is v₀ cos θ, not zero.", "exam1"),
+  e("kmh-not-converted", "km/h used as m/s", "Divide km/h by 3.6 to get m/s (1000 m per km, 3600 s per h). Mixing km/h with meters and seconds gives nonsense.", "exam1"),
+  e("vector-magnitudes-added", "Added vector magnitudes directly", "Vectors add by components (or tip-to-tail). |A + B| equals |A| + |B| only when they point the same way.", "exam1"),
+  e("angle-from-wrong-axis", "Angle measured from the wrong axis", "'North of east' is measured from the +x axis; 'east of north' from the +y axis. cos and sin swap when the reference axis changes.", "exam1"),
+
   // ---------- Exam 1 traps ----------
   e(
     "sin-cos-swap",

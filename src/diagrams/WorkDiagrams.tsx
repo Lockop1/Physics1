@@ -113,10 +113,10 @@ export function FxGraphDiagram({ spec }: { spec: FxGraphDiagramSpec }) {
         </Label>
       ))}
       <Label x={W - mr} y={H - 6} size={12} anchor="end">
-        x ({spec.xUnit ?? "m"})
+        {spec.xLabel ?? "x"} ({spec.xUnit ?? "m"})
       </Label>
       <Label x={ml + 4} y={mt - 4} size={12} anchor="start">
-        F ({spec.fUnit ?? "N"})
+        {spec.yLabel ?? "F"} ({spec.fUnit ?? "N"})
       </Label>
     </Svg>
   );
