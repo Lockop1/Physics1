@@ -9,7 +9,23 @@ import { recordDetectiveMode, recordEquationPick } from "../lib/storage";
 import { RichText, Tex } from "../lib/latex";
 import { Diagram } from "../diagrams/Diagram";
 import { EquationPicker } from "../components/EquationPicker";
-import { EquationLink } from "../components/Solution";
+import { EquationLinks } from "../components/Solution";
+import { PageHeader } from "../components/PageHeader";
+import { ActionBar } from "../components/ActionBar";
+
+const lc = (s: string) => (s ? s.charAt(0).toLowerCase() + s.slice(1) : s);
+
+export function FilterSelect({ value, onChange }: { value: string; onChange: (f: string) => void }) {
+  return (
+    <select className="compact" value={value} onChange={(e) => onChange(e.target.value)} aria-label="chapter filter">
+      {CHAPTER_FILTERS.map((f) => (
+        <option key={f.id} value={f.id}>
+          {f.label}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 /** Mode A: pick the equations. URL: /detective/pick/:templateId/:seed?filter=… */
 export function DetectivePickPage() {
@@ -50,17 +66,21 @@ export function PickRound({ templateId, seed, filter, onFilter, onNext, embedded
   const setup = useMemo(() => (q ? buildEquationOptions(createRng(seed * 7919 + 17), q) : null), [q, seed]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [grade, setGrade] = useState<ReturnType<typeof gradeEquationPick> | null>(null);
-  const [hide, setHide] = useState(true);
+  const [hide, setHide] = useState(!embedded);
   const template = templateById(templateId);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement | null)?.tagName === "INPUT") return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "SELECT") return;
       if (/^[1-8]$/.test(e.key) && setup && !grade) {
         const eq = setup.options[Number(e.key) - 1];
         if (eq) toggle(eq.id);
-      } else if (e.key === "Enter" && !grade) submit();
-      else if ((e.key === "n" || e.key === "N") && grade) onNext();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (grade) onNext();
+        else submit();
+      } else if ((e.key === "n" || e.key === "N") && grade) onNext();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -75,7 +95,7 @@ export function PickRound({ templateId, seed, filter, onFilter, onNext, embedded
       return n;
     });
   const submit = () => {
-    if (grade) return;
+    if (grade || selected.size === 0) return;
     const g = gradeEquationPick(selected, setup.correct);
     setGrade(g);
     recordDetectiveMode("pick", g.correct);
@@ -88,121 +108,111 @@ export function PickRound({ templateId, seed, filter, onFilter, onNext, embedded
     }
   };
   const prompt = hide ? hideNumbers(q.prompt) : q.prompt;
+  const summary = grade && !grade.correct ? [grade.extra.length ? `${grade.extra.length} decoy${grade.extra.length > 1 ? "s" : ""} picked` : "", grade.missing.length ? `${grade.missing.length} missing` : ""].filter(Boolean).join(" · ") : "";
 
   return (
-    <div>
-      {!embedded && (
-        <p className="small muted row spread">
-          <span>
-            <Link to="/detective">Detective</Link> › A · Pick the equations
-          </span>
-          {onFilter && (
-            <select value={filter} onChange={(e) => onFilter(e.target.value)}>
-              {CHAPTER_FILTERS.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
-          )}
-        </p>
+    <div className="question">
+      {!embedded && <PageHeader back={{ to: "/detective", label: "Detective" }} title="Equations" right={onFilter && <FilterSelect value={filter} onChange={onFilter} />} />}
+      {embedded && (
+        <div className="section-title" style={{ marginTop: 8 }}>
+          Now the equations
+        </div>
       )}
-      <div className="practice">
-        <div className="card">
-          <div className="row spread" style={{ marginBottom: 8 }}>
-            <span className="badge">{template.title}</span>
-            <label className="small row" style={{ gap: 6 }}>
-              <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} /> hide numbers
-            </label>
-          </div>
-          <div className="prompt">
-            <RichText text={prompt} />
-          </div>
-          {q.diagram && (
-            <div className="diagram-wrap">
-              <Diagram spec={q.diagram} hideNumbers={hide} />
-            </div>
-          )}
-          <div className="small muted">
-            Find: {q.target.label} {q.target.symbol && <Tex>{q.target.symbol}</Tex>}
-            {q.parts ? ` (and ${q.parts.length - 1} more part${q.parts.length > 2 ? "s" : ""})` : ""}
-          </div>
-          <h3 style={{ marginTop: 12 }}>Which equation(s) would you use?</h3>
-          <EquationPicker options={setup.options} selected={selected} onToggle={toggle} grade={grade} correct={setup.correct} />
-          <div className="actions">
-            {!grade && (
-              <button className="primary" onClick={submit} disabled={selected.size === 0}>
-                Check <kbd>↵</kbd>
-              </button>
-            )}
-            <button className={grade ? "primary" : ""} onClick={onNext}>
-              Next <kbd>N</kbd>
-            </button>
-            <Link className="btn" to={`/q/${templateId}/${seed}`}>
-              Solve this one with numbers
-            </Link>
-          </div>
-        </div>
-        <div className="sticky">
-          {grade ? (
-            <div className="card stack">
-              <div className={"feedback " + (grade.correct ? "good" : "bad")}>
-                <div className="label">{grade.correct ? "Exactly the right set." : "Not quite."}</div>
-                {grade.extra.length > 0 && (
-                  <div>
-                    <strong>Decoys you picked:</strong>
-                    <ul>
-                      {grade.extra.map((id) => {
-                        const eq = equationById(id)!;
-                        return (
-                          <li key={id}>
-                            <em>{eq.name}</em> — don't use when: {eq.dontUseWhen.join("; ")}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                )}
-                {grade.missing.length > 0 && (
-                  <div>
-                    <strong>Needed but not picked:</strong>
-                    <ul>
-                      {grade.missing.map((id) => {
-                        const eq = equationById(id)!;
-                        return (
-                          <li key={id}>
-                            <em>{eq.name}</em> — use when: {eq.useWhen[0]}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              <div>
-                <strong>Plan</strong>
-                <ol className="recipe">
-                  {q.recipe.map((r, i) => (
-                    <li key={i}>
-                      <RichText text={r} />
-                    </li>
-                  ))}
-                </ol>
-              </div>
-              <div>
-                <strong>Equations, in order</strong>
-                <div className="row" style={{ gap: 4 }}>
-                  {q.equations.map((id) => (
-                    <EquationLink key={id} id={id} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="card muted small">Pick every equation you'd need (and none you wouldn't), then check. Keys 1–8 toggle, ↵ checks.</div>
-          )}
-        </div>
+      <div className="prompt">
+        <RichText text={prompt} />
       </div>
+      {q.diagram && (
+        <div className="diagram-wrap">
+          <Diagram spec={q.diagram} hideNumbers={hide} />
+        </div>
+      )}
+      <div className="row spread" style={{ marginBottom: 8 }}>
+        <div className="target-line" style={{ margin: 0 }}>
+          Find {q.target.label} {q.target.symbol && <Tex>{q.target.symbol}</Tex>}
+          {q.parts ? ` (+${q.parts.length - 1} more part${q.parts.length > 2 ? "s" : ""})` : ""}
+        </div>
+        {!embedded && (
+          <label className="toggle-line">
+            <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} /> hide numbers
+          </label>
+        )}
+      </div>
+      <h3 style={{ marginTop: 8 }}>Which equations would you use?</h3>
+      <p className="helper">All you need, none you don't.</p>
+      <EquationPicker options={setup.options} selected={selected} onToggle={toggle} grade={grade} correct={setup.correct} />
+
+      {grade && (
+        <div className="card solution-card">
+          {grade.extra.length > 0 && (
+            <>
+              <h4 className="section-title">Decoys you picked</h4>
+              <ul className="small">
+                {grade.extra.map((id) => {
+                  const eq = equationById(id)!;
+                  return (
+                    <li key={id}>
+                      <strong>{eq.name}</strong> — not when {lc(eq.dontUseWhen[0] ?? "")}
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+          {grade.missing.length > 0 && (
+            <>
+              <h4 className="section-title" style={{ marginTop: grade.extra.length ? 14 : 0 }}>
+                Needed but not picked
+              </h4>
+              <ul className="small">
+                {grade.missing.map((id) => {
+                  const eq = equationById(id)!;
+                  return (
+                    <li key={id}>
+                      <strong>{eq.name}</strong> — use when {lc(eq.useWhen[0] ?? "")}
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+          <h4 className="section-title" style={{ marginTop: grade.correct ? 0 : 14 }}>
+            Plan
+          </h4>
+          <ol className="recipe">
+            {q.recipe.map((r, i) => (
+              <li key={i}>
+                <RichText text={r} />
+              </li>
+            ))}
+          </ol>
+          <h4 className="section-title" style={{ marginTop: 14 }}>
+            Equations, in order
+          </h4>
+          <EquationLinks ids={q.equations} />
+        </div>
+      )}
+
+      <ActionBar tone={grade ? (grade.correct ? "good" : "bad") : undefined} message={grade ? (grade.correct ? "Exactly the right set" : "Not quite") : undefined} detail={summary || undefined}>
+        {grade ? (
+          <>
+            <Link className="btn quiet" to={`/q/${templateId}/${seed}`}>
+              Solve with numbers
+            </Link>
+            <button className="primary" onClick={onNext}>
+              Next <kbd>↵</kbd>
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="quiet" onClick={onNext}>
+              Skip
+            </button>
+            <button className="primary" onClick={submit} disabled={selected.size === 0}>
+              Check <kbd>↵</kbd>
+            </button>
+          </>
+        )}
+      </ActionBar>
     </div>
   );
 }

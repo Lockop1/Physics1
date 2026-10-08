@@ -1,27 +1,27 @@
 import { Link } from "react-router-dom";
 
+/** One quiet line: how long until Exam 2. */
 export function Countdown({ examDate }: { examDate: string | null }) {
   if (!examDate) {
     return (
-      <div className="countdown muted small">
-        <Link to="/settings">Set your exam date</Link> to see a countdown.
+      <div className="countdown">
+        <Link to="/settings">Set your exam date</Link> for a countdown.
       </div>
     );
   }
   const target = new Date(examDate + "T00:00:00");
-  const now = new Date();
-  const days = Math.ceil((target.getTime() - now.getTime()) / 86_400_000);
+  const days = Math.ceil((target.getTime() - Date.now()) / 86_400_000);
   if (Number.isNaN(days)) return null;
   return (
     <div className="countdown">
       {days > 0 ? (
         <>
-          <strong>{days}</strong> day{days === 1 ? "" : "s"} until Exam 2 ({examDate})
+          <strong>{days}</strong> day{days === 1 ? "" : "s"} until Exam 2
         </>
       ) : days === 0 ? (
-        <strong>Exam 2 is today. Breathe.</strong>
+        <strong>Exam 2 is today.</strong>
       ) : (
-        <span className="muted">Exam 2 was {-days} day{days === -1 ? "" : "s"} ago.</span>
+        <>Exam 2 was {-days} day{days === -1 ? "" : "s"} ago.</>
       )}
     </div>
   );

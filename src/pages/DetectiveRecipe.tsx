@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { buildFor, randomQuestionFor, CHAPTER_FILTERS } from "../lib/detective";
+import { buildFor, randomQuestionFor } from "../lib/detective";
 import { shuffleRecipe, gradeRecipe, hideNumbers } from "../engine/detective";
 import { createRng } from "../engine/rng";
 import { templateById } from "../content/templates";
 import { recordDetectiveMode } from "../lib/storage";
 import { RichText } from "../lib/latex";
 import { Diagram } from "../diagrams/Diagram";
-import { EquationLink } from "../components/Solution";
+import { EquationLinks } from "../components/Solution";
+import { PageHeader } from "../components/PageHeader";
+import { ActionBar } from "../components/ActionBar";
+import { FilterSelect } from "./DetectivePick";
 
 /** Mode C: put the recipe steps in order. Drag on desktop, tap ▲▼ on mobile. */
 export function DetectiveRecipePage() {
@@ -46,112 +49,102 @@ function RecipeRound({ templateId, seed, filter, onFilter, onNext }: { templateI
     });
   };
   const submit = () => {
+    if (grade) return;
     const g = gradeRecipe(order);
     setGrade(g);
     recordDetectiveMode("recipe", g.correct);
   };
 
   return (
-    <div>
-      <p className="small muted row spread">
-        <span>
-          <Link to="/detective">Detective</Link> › C · Build the recipe
-        </span>
-        <select value={filter} onChange={(e) => onFilter(e.target.value)}>
-          {CHAPTER_FILTERS.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.label}
-            </option>
-          ))}
-        </select>
-      </p>
-      <div className="practice">
-        <div className="card">
-          <span className="badge">{template.title}</span>
-          <div className="prompt" style={{ marginTop: 8 }}>
-            <RichText text={hideNumbers(q.prompt)} />
-          </div>
-          {q.diagram && (
-            <div className="diagram-wrap">
-              <Diagram spec={q.diagram} hideNumbers />
-            </div>
-          )}
-          <h3>Put the steps in order</h3>
-          <ol className="recipe-order">
-            {order.map((stepIdx, pos) => {
-              const ok = grade ? stepIdx === pos : null;
-              return (
-                <li
-                  key={stepIdx}
-                  className={"recipe-step" + (ok === true ? " correct" : ok === false ? " wrong" : "") + (dragIdx === pos ? " dragging" : "")}
-                  draggable={!grade}
-                  onDragStart={() => setDragIdx(pos)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => {
-                    if (dragIdx !== null) move(dragIdx, pos);
-                    setDragIdx(null);
-                  }}
-                  onDragEnd={() => setDragIdx(null)}
-                >
-                  <span className="key">{pos + 1}</span>
-                  <span className="grow">
-                    <RichText text={q.recipe[stepIdx]!} />
-                  </span>
-                  {!grade && (
-                    <span className="row" style={{ gap: 2 }}>
-                      <button className="ghost" onClick={() => move(pos, pos - 1)} disabled={pos === 0} aria-label="move up">
-                        ▲
-                      </button>
-                      <button className="ghost" onClick={() => move(pos, pos + 1)} disabled={pos === order.length - 1} aria-label="move down">
-                        ▼
-                      </button>
-                    </span>
-                  )}
-                </li>
-              );
-            })}
+    <div className="question">
+      <PageHeader back={{ to: "/detective", label: "Detective" }} title="Recipe" right={<FilterSelect value={filter} onChange={onFilter} />} />
+      <div className="prompt">
+        <RichText text={hideNumbers(q.prompt)} />
+      </div>
+      {q.diagram && (
+        <div className="diagram-wrap">
+          <Diagram spec={q.diagram} hideNumbers />
+        </div>
+      )}
+      <h3>Put the steps in order</h3>
+      <p className="helper">The order you'd actually do them.</p>
+      <ol className="recipe-order">
+        {order.map((stepIdx, pos) => {
+          const ok = grade ? stepIdx === pos : null;
+          return (
+            <li
+              key={stepIdx}
+              className={"recipe-step" + (ok === true ? " correct" : ok === false ? " wrong" : "") + (dragIdx === pos ? " dragging" : "")}
+              draggable={!grade}
+              onDragStart={() => setDragIdx(pos)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => {
+                if (dragIdx !== null) move(dragIdx, pos);
+                setDragIdx(null);
+              }}
+              onDragEnd={() => setDragIdx(null)}
+            >
+              <span className="key">{pos + 1}</span>
+              <span className="grow">
+                <RichText text={q.recipe[stepIdx]!} />
+              </span>
+              {!grade && (
+                <span className="arrows">
+                  <button onClick={() => move(pos, pos - 1)} disabled={pos === 0} aria-label="move up">
+                    ▲
+                  </button>
+                  <button onClick={() => move(pos, pos + 1)} disabled={pos === order.length - 1} aria-label="move down">
+                    ▼
+                  </button>
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+      {grade && !grade.correct && (
+        <div className="card solution-card">
+          <h4 className="section-title">Correct order</h4>
+          <ol className="recipe">
+            {q.recipe.map((r, i) => (
+              <li key={i}>
+                <RichText text={r} />
+              </li>
+            ))}
           </ol>
-          <div className="actions">
-            {!grade && (
-              <button className="primary" onClick={submit}>
-                Check
-              </button>
-            )}
-            <button className={grade ? "primary" : ""} onClick={onNext}>
+          <h4 className="section-title" style={{ marginTop: 14 }}>
+            Equations
+          </h4>
+          <EquationLinks ids={q.equations} />
+        </div>
+      )}
+      {grade && grade.correct && (
+        <div className="card solution-card">
+          <h4 className="section-title">Equations</h4>
+          <EquationLinks ids={q.equations} />
+        </div>
+      )}
+      <ActionBar tone={grade ? (grade.correct ? "good" : "bad") : undefined} message={grade ? (grade.correct ? "That's the plan" : `Order is off from step ${grade.firstWrong + 1}`) : undefined}>
+        {grade ? (
+          <>
+            <Link className="btn quiet" to={`/q/${templateId}/${seed}`}>
+              Solve with numbers
+            </Link>
+            <button className="primary" onClick={onNext}>
               Next
             </button>
-            <Link className="btn" to={`/q/${templateId}/${seed}`}>
-              Solve it with numbers
-            </Link>
-          </div>
-        </div>
-        <div className="sticky">
-          {grade ? (
-            <div className="card stack">
-              <div className={"feedback " + (grade.correct ? "good" : "bad")}>
-                <div className="label">{grade.correct ? "That's the plan." : `Order is off from step ${grade.firstWrong + 1}.`}</div>
-              </div>
-              <div>
-                <strong>Correct order</strong>
-                <ol className="recipe">
-                  {q.recipe.map((r, i) => (
-                    <li key={i}>
-                      <RichText text={r} />
-                    </li>
-                  ))}
-                </ol>
-              </div>
-              <div className="row" style={{ gap: 4 }}>
-                {q.equations.map((id) => (
-                  <EquationLink key={id} id={id} />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="card muted small">Drag the steps (or use ▲▼) into the order you'd actually do them, then check.</div>
-          )}
-        </div>
-      </div>
+          </>
+        ) : (
+          <>
+            <button className="quiet" onClick={onNext}>
+              Skip
+            </button>
+            <button className="primary" onClick={submit}>
+              Check
+            </button>
+          </>
+        )}
+      </ActionBar>
     </div>
   );
 }

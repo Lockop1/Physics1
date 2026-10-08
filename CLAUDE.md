@@ -184,7 +184,7 @@ The real formula sheet's exact contents are unknown. Keep `onSheet` easy to edit
 
 ## App modes
 
-1. **Practice by topic** — topic tree grouped Exam 2 (first) / Exam 1. Pick a topic → random template from it, or pick a specific template. Toggle MCQ vs free-response. Buttons: Hint (progressive), Submit, Show solution, Next (new numbers), Same type again.
+1. **Practice by topic** — topic tree grouped Exam 2 (first) / Exam 1. Pick a topic → random template from it, or pick a specific template. Toggle MCQ vs free-response. One bottom action bar: **Check** (plus a quiet "Not sure? Reveal" that counts as a miss) → feedback → **Next** (new numbers). No hints, no "same type again". See `docs/DESIGN.md`.
 2. **Equation Detective** — the equation-selection trainer (see Session 4 prompt for full spec). Includes the equation-sheet reference page.
 3. **Exam simulation** — N mixed MCQs (default 20), weighted toward Exam 2 chapters, optional timer, no hints, results broken down by topic and by named error.
 4. **Weak spots** — drills the templates/errors with the worst recent accuracy.
@@ -198,8 +198,8 @@ The real formula sheet's exact contents are unknown. Keep `onSheet` easy to edit
 
 ## UI requirements
 
-- Mobile-first, works on a phone at 375px wide; desktop gets a two-column layout (question | work/solution).
-- Keyboard: 1–5 select choice, Enter submit, N next, H hint, S solution.
+- Phone-first (375px, one-handed): single focused column, bottom tab bar, fixed bottom action bar with one primary action; desktop gets a top nav and wider margins. Solution appears below the question only after answering (auto-open on a miss). Minimal copy. See `docs/DESIGN.md`.
+- Keyboard (desktop): 1–5 select choice, Enter = the primary action (check / continue / next), N next.
 - Question URL includes template id + seed (`#/q/ch6.flat-curve.vmax/123456`) so any question can be revisited.
 - Diagrams: labeled, roughly to scale with the generated angles/lengths, readable in both themes.
 - Clean and calm, not gamified-noisy. Mastery bar per topic on home.

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { buildQuestion, nextForTopic, nextWeakSpot, nextForError } from "../lib/question";
 import { templateById } from "../content/templates";
 import { topicById } from "../content/topics";
@@ -9,10 +9,12 @@ import { fmtDisplay } from "../engine/params";
 import { randomSeed } from "../engine/rng";
 import type { GeneratedQuestion, QuestionPart } from "../engine/types";
 import { getSettings, recordAttempt, setLastQuestion, updateSettings } from "../lib/storage";
-import { RichText, Tex } from "../lib/latex";
+import { RichText } from "../lib/latex";
 import { Diagram } from "../diagrams/Diagram";
 import { ChoiceList } from "../components/ChoiceList";
 import { Solution, PartSolution } from "../components/Solution";
+import { PageHeader } from "../components/PageHeader";
+import { ActionBar } from "../components/ActionBar";
 
 type Mode = "mcq" | "free";
 
@@ -43,13 +45,18 @@ interface PartState {
   submitted: boolean;
   correct: boolean | null;
   errorId: string | null;
+  revealed: boolean;
 }
-const freshPart = (): PartState => ({ selected: null, typed: "", submitted: false, correct: null, errorId: null });
+const freshPart = (): PartState => ({ selected: null, typed: "", submitted: false, correct: null, errorId: null, revealed: false });
 
 /** Normalise a question into a list of parts (single-answer questions become one unlabeled part). */
 function partsOf(q: GeneratedQuestion): QuestionPart[] {
   if (q.parts && q.parts.length > 0) return q.parts;
   return [{ label: "", prompt: "", target: q.target, answer: q.answer, choices: q.choices, solution: q.solution }];
+}
+
+function answerText(part: QuestionPart): string {
+  return typeof part.answer === "number" ? `${fmtDisplay(part.answer)}${part.target.unit ? " " + part.target.unit : ""}` : String(part.answer);
 }
 
 function Question({ templateId, seed }: { templateId: string; seed: number }) {
@@ -62,23 +69,48 @@ function Question({ templateId, seed }: { templateId: string; seed: number }) {
   const multi = !!q?.parts;
   const [mode, setMode] = useState<Mode>(() => getSettings().defaultMode);
   const [states, setStates] = useState<PartState[]>(() => parts.map(freshPart));
-  const [hintsShown, setHintsShown] = useState(0);
-  const [showSolution, setShowSolution] = useState(false);
+  /** Index of the part whose feedback is showing in the action bar, waiting for "Continue". */
+  const [pending, setPending] = useState<number | null>(null);
+  const [parseError, setParseError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const solutionRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
     if (q) setLastQuestion(templateId, seed);
   }, [templateId, seed, q]);
 
+  // After a miss, bring the worked solution up above the feedback bar so it's obvious where to look.
+  useEffect(() => {
+    if (pending === null) return;
+    const st = states[pending];
+    if (!st || st.correct) return;
+    const el = solutionRef.current ?? document.querySelector<HTMLElement>(".part .solution-card[open]");
+    requestAnimationFrame(() => el?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pending]);
+
   const isConceptual = template?.kind === "conceptual" || typeof q?.answer === "string";
   const effectiveMode: Mode = isConceptual ? "mcq" : mode;
   const activeIndex = states.findIndex((s) => !s.submitted); // first unsubmitted part, -1 when done
   const allDone = activeIndex === -1;
+  const anySubmitted = states.some((s) => s.submitted);
 
   const updatePart = (i: number, patch: Partial<PartState>) => setStates((prev) => prev.map((s, j) => (j === i ? { ...s, ...patch } : s)));
 
+  const finish = useCallback(
+    (next: PartState[]) => {
+      setStates(next);
+      if (next.every((s) => s.submitted)) {
+        const allCorrect = next.every((s) => s.correct);
+        const firstErr = next.find((s) => s.errorId)?.errorId ?? undefined;
+        recordAttempt(templateId, allCorrect, firstErr);
+      }
+    },
+    [templateId],
+  );
+
   const submit = useCallback(() => {
-    if (!q || activeIndex === -1) return;
+    if (!q || activeIndex === -1 || pending !== null) return;
     const part = parts[activeIndex]!;
     const st = states[activeIndex]!;
     let ok = false;
@@ -91,26 +123,30 @@ function Question({ templateId, seed }: { templateId: string; seed: number }) {
       errorId = c.errorId;
     } else {
       const res = checkNumeric(st.typed, part.answer);
-      if (res.parsed === null) return;
+      if (res.parsed === null) {
+        setParseError(true);
+        return;
+      }
       ok = res.correct;
       if (!ok) {
         const hit = part.choices.find((c) => !c.correct && typeof c.value === "number" && checkNumeric(res.parsed as number, c.value).correct);
         errorId = hit?.errorId;
       }
     }
-    const next = states.map((s, j) => (j === activeIndex ? { ...s, submitted: true, correct: ok, errorId: errorId ?? null } : s));
-    setStates(next);
-    if (!ok) setShowSolution(true);
-    // record once, when the last part is submitted
-    if (next.every((s) => s.submitted)) {
-      const allCorrect = next.every((s) => s.correct);
-      const firstErr = next.find((s) => s.errorId)?.errorId ?? undefined;
-      recordAttempt(templateId, allCorrect, firstErr);
-    }
-  }, [q, parts, states, activeIndex, effectiveMode, templateId]);
+    setParseError(false);
+    finish(states.map((s, j) => (j === activeIndex ? { ...s, submitted: true, correct: ok, errorId: errorId ?? null } : s)));
+    setPending(activeIndex);
+  }, [q, parts, states, activeIndex, pending, effectiveMode, finish]);
+
+  /** "I don't know": counts as a miss, shows the answer and the solution. */
+  const reveal = useCallback(() => {
+    if (activeIndex === -1 || pending !== null) return;
+    finish(states.map((s, j) => (j === activeIndex ? { ...s, submitted: true, correct: false, revealed: true } : s)));
+    setPending(activeIndex);
+  }, [states, activeIndex, pending, finish]);
 
   const next = useCallback(() => {
-    if (!template) return;
+    if (!template || !allDone) return;
     if (drill) {
       const pick = drill.startsWith("error:") ? nextForError(drill.slice(6)) : nextWeakSpot();
       if (pick) {
@@ -120,199 +156,208 @@ function Question({ templateId, seed }: { templateId: string; seed: number }) {
     }
     const pick = nextForTopic(template.topicId);
     if (pick) navigate(`/q/${pick.template.id}/${pick.seed}`);
-  }, [template, navigate, drill]);
-  const sameType = useCallback(() => navigate(`/q/${templateId}/${randomSeed()}`), [templateId, navigate]);
+  }, [template, navigate, drill, allDone]);
 
-  // keyboard shortcuts
+  const continueNext = useCallback(() => {
+    setPending(null);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  }, []);
+
+  // keyboard shortcuts (desktop): 1–5 pick, Enter = the primary action, N = next
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT");
       if (e.key === "Enter") {
         e.preventDefault();
-        submit();
+        if (allDone) next();
+        else if (pending !== null) continueNext();
+        else submit();
         return;
       }
       if (typing) return;
-      if (/^[1-5]$/.test(e.key) && activeIndex !== -1) {
+      if (/^[1-5]$/.test(e.key) && activeIndex !== -1 && pending === null) {
         const part = parts[activeIndex]!;
         if (effectiveMode === "mcq" || typeof part.answer === "string") {
           const i = Number(e.key) - 1;
           if (i < part.choices.length) updatePart(activeIndex, { selected: i });
         }
-      } else if (e.key === "n" || e.key === "N") next();
-      else if (e.key === "h" || e.key === "H") setHintsShown((h) => Math.min(h + 1, q?.hints.length ?? 0));
-      else if (e.key === "s" || e.key === "S") setShowSolution(true);
-      else if (e.key === "r" || e.key === "R") sameType();
+      } else if ((e.key === "n" || e.key === "N") && allDone) next();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [submit, next, sameType, effectiveMode, activeIndex, parts, q]);
+  }, [submit, next, continueNext, effectiveMode, activeIndex, parts, allDone, pending]);
 
   if (!template || !q) return <p>Unknown question type: {templateId}</p>;
   const topic = topicById(template.topicId);
   const activeState = activeIndex === -1 ? null : states[activeIndex]!;
   const activePart = activeIndex === -1 ? null : parts[activeIndex]!;
   const canSubmit = activePart && activeState ? (effectiveMode === "mcq" || typeof activePart.answer === "string" ? activeState.selected !== null : activeState.typed.trim() !== "") : false;
+  const allCorrect = allDone && states.every((s) => s.correct);
+  const anyMiss = states.some((s) => s.submitted && !s.correct);
+  // parts shown: everything up to the one being answered (the next part waits until "Continue")
+  const lastVisible = pending !== null ? pending : allDone ? parts.length - 1 : activeIndex;
+
+  // ----- action bar content -----
+  let bar: { tone?: "good" | "bad" | "neutral"; message?: ReactNode; detail?: ReactNode; buttons: ReactNode };
+  const fbIndex = pending !== null ? pending : allDone ? parts.length - 1 : null;
+  if (fbIndex !== null) {
+    const st = states[fbIndex]!;
+    const part = parts[fbIndex]!;
+    const err = st.errorId ? errorById(st.errorId) : null;
+    const useMcq = effectiveMode === "mcq" || typeof part.answer === "string";
+    let tone: "good" | "bad" | "neutral";
+    let message: ReactNode;
+    let detail: ReactNode = null;
+    if (st.revealed) {
+      tone = "neutral";
+      message = (
+        <>
+          Answer: <RichText text={answerText(part)} />
+        </>
+      );
+      detail = "Counted as a miss, so this type comes back sooner.";
+    } else if (st.correct) {
+      tone = "good";
+      message = multi ? `Part ${part.label} correct` : "Correct";
+    } else {
+      tone = "bad";
+      message = "Not quite";
+      if (err) {
+        detail = (
+          <>
+            <strong>{err.label}.</strong> {err.explanation}
+          </>
+        );
+      } else if (!useMcq) {
+        detail = (
+          <>
+            The answer is <RichText text={answerText(part)} />.
+          </>
+        );
+      } else {
+        detail = "The correct choice is highlighted. The solution is below.";
+      }
+    }
+    const more = pending !== null && !allDone;
+    bar = {
+      tone,
+      message,
+      detail,
+      buttons: more ? (
+        <button className="primary" onClick={continueNext}>
+          Continue <kbd>↵</kbd>
+        </button>
+      ) : (
+        <button className="primary" onClick={next}>
+          Next question <kbd>↵</kbd>
+        </button>
+      ),
+    };
+  } else {
+    bar = {
+      buttons: (
+        <>
+          <button className="quiet" onClick={reveal}>
+            Not sure? Reveal
+          </button>
+          <button className="primary" onClick={submit} disabled={!canSubmit}>
+            Check{multi && activePart ? ` ${activePart.label}` : ""} <kbd>↵</kbd>
+          </button>
+        </>
+      ),
+    };
+  }
+
+  const modeToggle = !isConceptual && (
+    <div className="seg mini" role="group" aria-label="answer mode">
+      <button className={effectiveMode === "mcq" ? "on" : ""} disabled={anySubmitted} onClick={() => { setMode("mcq"); updateSettings({ defaultMode: "mcq" }); }}>
+        Choices
+      </button>
+      <button className={effectiveMode === "free" ? "on" : ""} disabled={anySubmitted} onClick={() => { setMode("free"); updateSettings({ defaultMode: "free" }); setTimeout(() => inputRef.current?.focus(), 0); }}>
+        Type
+      </button>
+    </div>
+  );
 
   return (
-    <div>
-      <p className="small muted row spread">
-        <span>
-          <Link to="/">Home</Link> › <Link to={`/topic/${template.topicId}`}>{topic?.title ?? template.topicId}</Link> › {template.title}
-        </span>
-        <span className="stat">#{seed}</span>
-      </p>
-      <div className="practice">
-        <div className="card">
-          <div className="row spread" style={{ marginBottom: 10 }}>
-            <span className="badge">{template.kind}{multi ? ` · ${parts.length} parts` : ""}</span>
-            {!isConceptual && (
-              <div className="toggle" role="group" aria-label="answer mode">
-                <button className={effectiveMode === "mcq" ? "on" : ""} onClick={() => { setMode("mcq"); updateSettings({ defaultMode: "mcq" }); }} disabled={states.some((s) => s.submitted)}>
-                  Multiple choice
-                </button>
-                <button className={effectiveMode === "free" ? "on" : ""} onClick={() => { setMode("free"); updateSettings({ defaultMode: "free" }); setTimeout(() => inputRef.current?.focus(), 0); }} disabled={states.some((s) => s.submitted)}>
-                  Type answer
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="prompt">
-            <RichText text={q.prompt} />
-          </div>
-          {q.diagram && (
-            <div className="diagram-wrap">
-              <Diagram spec={q.diagram} />
-            </div>
-          )}
-          {q.givens.length > 0 && (
-            <div className="givens">
-              {q.givens.map((g, i) => (
-                <span className="chip" key={i}>
-                  <Tex>{g.symbol}</Tex> = <RichText text={fmtDisplay(g.value)} /> {g.unit}
-                  {g.note ? ` (${g.note})` : ""}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {parts.map((part, i) => {
-            const st = states[i]!;
-            const isActive = i === activeIndex;
-            const visible = i <= Math.max(activeIndex === -1 ? parts.length - 1 : activeIndex, 0);
-            if (!visible) return null;
-            const stringAnswer = typeof part.answer === "string";
-            const useMcq = effectiveMode === "mcq" || stringAnswer;
-            const err = st.errorId ? errorById(st.errorId) : null;
-            return (
-              <div key={i} className={multi ? "part" + (isActive ? " active" : "") : ""}>
-                {multi && (
-                  <div className="part-prompt">
-                    <strong>{part.label}</strong> <RichText text={part.prompt} />
-                  </div>
-                )}
-                <div className="small muted" style={{ marginBottom: 6 }}>
-                  Find: {part.target.label} {part.target.symbol && <Tex>{part.target.symbol}</Tex>}
-                  {part.target.unit ? ` (${part.target.unit})` : ""}
-                </div>
-                {useMcq ? (
-                  <ChoiceList choices={part.choices} unit={part.target.unit} selected={st.selected} submitted={st.submitted} onSelect={(sel) => updatePart(i, { selected: sel })} />
-                ) : (
-                  <div className="free-input">
-                    <input
-                      ref={isActive ? inputRef : undefined}
-                      type="text"
-                      inputMode="decimal"
-                      placeholder="your answer"
-                      value={st.typed}
-                      onChange={(e) => updatePart(i, { typed: e.target.value })}
-                      disabled={st.submitted}
-                      autoFocus={isActive}
-                    />
-                    <span className="muted">{part.target.unit}</span>
-                    <span className="small muted">(±2%)</span>
-                  </div>
-                )}
-                {st.submitted && (
-                  <div className={"feedback " + (st.correct ? "good" : "bad")}>
-                    <div className="label">{st.correct ? "Correct!" : "Not quite."}</div>
-                    {!st.correct && err && (
-                      <div>
-                        <strong>{err.label}.</strong> {err.explanation}
-                      </div>
-                    )}
-                    {!st.correct && !err && !useMcq && typeof part.answer === "number" && (
-                      <div>
-                        Expected <RichText text={fmtDisplay(part.answer)} /> {part.target.unit}.
-                      </div>
-                    )}
-                    {!st.correct && !err && useMcq && <div>See the worked solution.</div>}
-                  </div>
-                )}
-                {multi && st.submitted && showSolution && (
-                  <details className="part-solution" open={!st.correct}>
-                    <summary className="small muted">Solution for {part.label}</summary>
-                    <PartSolution part={part} />
-                  </details>
-                )}
-              </div>
-            );
-          })}
-
-          {hintsShown > 0 && (
-            <div>
-              {q.hints.slice(0, hintsShown).map((h, i) => (
-                <div className="hint" key={i}>
-                  <span className="small muted">Hint {i + 1}: </span>
-                  <RichText text={h} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="actions">
-            {!allDone && (
-              <button className="primary" onClick={submit} disabled={!canSubmit}>
-                Submit{multi && activePart ? ` ${activePart.label}` : ""} <kbd>↵</kbd>
-              </button>
-            )}
-            <button onClick={() => setHintsShown((h) => Math.min(h + 1, q.hints.length))} disabled={hintsShown >= q.hints.length}>
-              Hint <kbd>H</kbd>
-            </button>
-            <button onClick={() => setShowSolution(true)} disabled={showSolution}>
-              Show solution <kbd>S</kbd>
-            </button>
-            <button className={allDone ? "primary" : ""} onClick={next}>
-              Next <kbd>N</kbd>
-            </button>
-            <button onClick={sameType}>
-              Same type again <kbd>R</kbd>
-            </button>
-          </div>
-          <div className="small muted shortcuts">
-            Keys: <kbd>1</kbd>–<kbd>5</kbd> pick · <kbd>↵</kbd> submit · <kbd>H</kbd> hint · <kbd>S</kbd> solution · <kbd>N</kbd> next
-          </div>
-        </div>
-
-        <div className="sticky">
-          {showSolution ? (
-            <div className="card">
-              <h2>Solution</h2>
-              <Solution q={q} />
-            </div>
-          ) : (
-            <div className="card muted small">
-              Work it out, then submit. The solution, the plan, and the equations used appear here afterward.
-              {template.source && (
-                <div style={{ marginTop: 8 }}>
-                  Based on: <em>{template.source}</em>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+    <div className="question">
+      <PageHeader back={drill ? { to: "/", label: "Home" } : { to: `/topic/${template.topicId}`, label: topic?.title ?? "Topic" }} right={modeToggle} />
+      <div className="prompt">
+        <RichText text={q.prompt} />
       </div>
+      {q.diagram && (
+        <div className="diagram-wrap">
+          <Diagram spec={q.diagram} />
+        </div>
+      )}
+
+      {parts.map((part, i) => {
+        if (i > lastVisible) return null;
+        const st = states[i]!;
+        const isActive = i === activeIndex && pending === null;
+        const stringAnswer = typeof part.answer === "string";
+        const useMcq = effectiveMode === "mcq" || stringAnswer;
+        return (
+          <div key={i} className={multi ? "part" : ""}>
+            {multi && (
+              <>
+                <div className="part-label">
+                  <span>Part {part.label}</span>
+                  {st.submitted && <span className={"part-status " + (st.correct ? "good" : "bad")}>{st.correct ? "✓" : st.revealed ? "revealed" : "✗"}</span>}
+                </div>
+                <div className="prompt" style={{ fontSize: "1.02rem", marginBottom: 8 }}>
+                  <RichText text={part.prompt} />
+                </div>
+              </>
+            )}
+            {useMcq ? (
+              <ChoiceList choices={part.choices} unit={part.target.unit} selected={st.selected} submitted={st.submitted} onSelect={(sel) => updatePart(i, { selected: sel })} showTag={false} />
+            ) : (
+              <div className="free-input">
+                <input
+                  ref={isActive ? inputRef : undefined}
+                  type="text"
+                  inputMode="decimal"
+                  placeholder={part.target.label}
+                  aria-label={part.target.label}
+                  value={st.typed}
+                  onChange={(e) => {
+                    setParseError(false);
+                    updatePart(i, { typed: e.target.value });
+                  }}
+                  disabled={st.submitted}
+                  autoFocus={isActive}
+                />
+                {part.target.unit && <span className="unit">{part.target.unit}</span>}
+              </div>
+            )}
+            {isActive && parseError && !useMcq && <div className="small" style={{ color: "var(--bad)" }}>Enter a number, e.g. 13.4 or 2.5e3.</div>}
+            {multi && st.submitted && (
+              <details className="solution-card card" open={!st.correct}>
+                <summary>Solution for part {part.label}</summary>
+                <PartSolution part={part} />
+              </details>
+            )}
+          </div>
+        );
+      })}
+
+      {allDone && (
+        <details className="solution-card card" open={anyMiss || !allCorrect} ref={solutionRef}>
+          <summary>{multi ? "Plan and equations" : "Solution"}</summary>
+          {multi ? <Solution q={q} omitSteps /> : <Solution q={q} />}
+        </details>
+      )}
+
+      <p className="source-line">
+        {template.title} · #{seed}
+        {allDone && template.source ? ` · from ${template.source}` : ""}
+      </p>
+
+      <ActionBar tone={bar.tone} message={bar.message} detail={bar.detail}>
+        {bar.buttons}
+      </ActionBar>
     </div>
   );
 }

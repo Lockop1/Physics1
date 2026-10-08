@@ -8,10 +8,14 @@ import { templateById } from "../content/templates";
 import { topicById, CHAPTERS } from "../content/topics";
 import { errorById } from "../content/errors";
 import { getExams, recordExam, type ExamRecord } from "../lib/storage";
-import { RichText, Tex } from "../lib/latex";
+import { RichText } from "../lib/latex";
 import { Diagram } from "../diagrams/Diagram";
 import { ChoiceList } from "../components/ChoiceList";
 import { Solution } from "../components/Solution";
+import { PageHeader } from "../components/PageHeader";
+import { ActionBar } from "../components/ActionBar";
+
+const examLabel = (e: ExamChoice) => (e === "exam2" ? "Exam 2" : e === "exam1" ? "Exam 1" : "Mixed");
 
 // ---------------- setup ----------------
 export function ExamSetupPage() {
@@ -22,52 +26,57 @@ export function ExamSetupPage() {
   const [minutes, setMinutes] = useState(75);
   const exams = getExams();
   return (
-    <div className="stack">
+    <div>
       <h1>Exam simulation</h1>
-      <p className="muted">Multiple choice only, no hints, no feedback until you submit — like the real thing. About a quarter of the questions are conceptual.</p>
-      <div className="card stack" style={{ maxWidth: 520 }}>
-        <label className="row">
-          <span style={{ minWidth: 150 }}>Exam</span>
+      <p className="helper">Multiple choice, no feedback until you submit.</p>
+      <div className="card">
+        <label className="field">
+          <span>Exam</span>
           <select value={exam} onChange={(e) => setExam(e.target.value as ExamChoice)}>
             <option value="exam2">Exam 2</option>
             <option value="exam1">Exam 1</option>
-            <option value="mixed">Mixed (weighted to Exam 2)</option>
+            <option value="mixed">Mixed (mostly Exam 2)</option>
           </select>
         </label>
-        <label className="row">
-          <span style={{ minWidth: 150 }}>Questions</span>
+        <label className="field">
+          <span>Questions</span>
           <input type="number" min={5} max={60} value={count} onChange={(e) => setCount(Math.max(5, Math.min(60, Number(e.target.value) || 20)))} style={{ width: 90 }} />
         </label>
-        <label className="row">
-          <span style={{ minWidth: 150 }}>Timer</span>
-          <input type="checkbox" checked={timed} onChange={(e) => setTimed(e.target.checked)} />
-          <input type="number" min={5} max={240} value={minutes} disabled={!timed} onChange={(e) => setMinutes(Math.max(5, Number(e.target.value) || 75))} style={{ width: 90 }} /> min
+        <label className="field">
+          <span>Timer</span>
+          <span className="row" style={{ gap: 8 }}>
+            <input type="checkbox" checked={timed} onChange={(e) => setTimed(e.target.checked)} />
+            <input type="number" min={5} max={240} value={minutes} disabled={!timed} onChange={(e) => setMinutes(Math.max(5, Number(e.target.value) || 75))} style={{ width: 80 }} aria-label="minutes" />
+            <span className="muted small">min</span>
+          </span>
         </label>
-        <div className="actions">
-          <button className="primary" onClick={() => navigate(`/exam/run/${randomSeed()}?exam=${exam}&n=${count}&t=${timed ? minutes * 60 : 0}`)}>
-            Start exam
-          </button>
-        </div>
       </div>
+      <button className="primary big" style={{ marginTop: 14 }} onClick={() => navigate(`/exam/run/${randomSeed()}?exam=${exam}&n=${count}&t=${timed ? minutes * 60 : 0}`)}>
+        Start exam
+      </button>
       {exams.length > 0 && (
-        <div className="card">
-          <h2>History</h2>
-          <ul className="template-list">
+        <section>
+          <div className="section-title">Past exams</div>
+          <ul className="list">
             {[...exams].reverse().map((r) => (
               <li key={r.id}>
-                <div className="grow">
-                  <strong>{Math.round((100 * r.score) / r.count)}%</strong> · {r.score}/{r.count} · {r.exam === "exam2" ? "Exam 2" : r.exam === "exam1" ? "Exam 1" : "Mixed"}
-                  <div className="small muted">
-                    {new Date(r.finishedAt).toLocaleString()} · {r.timerSec ? `${Math.round(r.timerSec / 60)} min timer` : "untimed"} · took {Math.round((r.finishedAt - r.startedAt) / 60000)} min
+                <Link to={`/exam/results/${r.id}`} className="list-row">
+                  <div className="body">
+                    <div className="title">
+                      {Math.round((100 * r.score) / r.count)}% <span className="muted">· {r.score}/{r.count}</span>
+                    </div>
+                    <div className="sub">
+                      {examLabel(r.exam)} · {new Date(r.finishedAt).toLocaleDateString()} · {Math.round((r.finishedAt - r.startedAt) / 60000)} min
+                    </div>
                   </div>
-                </div>
-                <Link className="btn" to={`/exam/results/${r.id}`}>
-                  Review
+                  <svg className="chev" viewBox="0 0 18 18" aria-hidden="true">
+                    <path d="m7 4 5 5-5 5" />
+                  </svg>
                 </Link>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       )}
     </div>
   );
@@ -133,6 +142,14 @@ export function ExamRunPage() {
     return () => clearInterval(t);
   }, [timerSec, startedAt, submit]);
 
+  const goto = useCallback(
+    (i: number) => {
+      setIdx(Math.max(0, Math.min(items.length - 1, i)));
+      window.scrollTo({ top: 0 });
+    },
+    [items.length],
+  );
+
   // keys
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -141,58 +158,70 @@ export function ExamRunPage() {
       if (/^[1-5]$/.test(e.key)) {
         const i = Number(e.key) - 1;
         if (i < q.choices.length) setAnswers((prev) => prev.map((a, j) => (j === idx ? { picked: i } : a)));
-      } else if (e.key === "n" || e.key === "N" || e.key === "ArrowRight") setIdx((i) => Math.min(i + 1, items.length - 1));
-      else if (e.key === "p" || e.key === "P" || e.key === "ArrowLeft") setIdx((i) => Math.max(i - 1, 0));
+      } else if (e.key === "n" || e.key === "N" || e.key === "ArrowRight" || e.key === "Enter") goto(idx + 1);
+      else if (e.key === "p" || e.key === "P" || e.key === "ArrowLeft") goto(idx - 1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [idx, questions, items.length]);
+  }, [idx, questions, goto]);
 
   const q = questions[idx];
   if (!q) return <p>Could not build the exam.</p>;
   const answered = answers.filter((a) => a.picked >= 0).length;
   const mm = Math.floor(remaining / 60);
   const ss = String(remaining % 60).padStart(2, "0");
+  const last = idx === items.length - 1;
+  const trySubmit = () => {
+    if (answered === items.length || confirm(`${items.length - answered} unanswered. Submit anyway?`)) submit();
+  };
 
   return (
-    <div>
-      <div className="row spread exam-bar">
-        <span>
-          Question <strong>{idx + 1}</strong> / {items.length} · {answered} answered
-        </span>
-        {timerSec > 0 && (
-          <span className={"stat timer" + (remaining < 300 ? " low" : "")}>
-            {mm}:{ss}
+    <div className="question">
+      <div className="exam-bar">
+        <div className="row">
+          <span className="stat">
+            <strong>{idx + 1}</strong> <span className="muted">/ {items.length}</span>
           </span>
-        )}
-        <button className="primary" onClick={() => { if (answered === items.length || confirm(`${items.length - answered} unanswered. Submit anyway?`)) submit(); }}>
-          Submit exam
-        </button>
-      </div>
-      <div className="exam-nav">
-        {items.map((_, i) => (
-          <button key={i} className={"exam-dot" + (i === idx ? " current" : "") + (answers[i]!.picked >= 0 ? " done" : "")} onClick={() => setIdx(i)}>
-            {i + 1}
-          </button>
-        ))}
-      </div>
-      <div className="card">
-        <ExamQuestion q={q} />
-        <ChoiceList choices={q.choices} unit={q.target.unit} selected={answers[idx]!.picked >= 0 ? answers[idx]!.picked : null} submitted={false} onSelect={(i) => setAnswers((prev) => prev.map((a, j) => (j === idx ? { picked: i } : a)))} />
-        <div className="actions">
-          <button onClick={() => setIdx((i) => Math.max(i - 1, 0))} disabled={idx === 0}>
-            ← Previous <kbd>P</kbd>
-          </button>
-          <button className="primary" onClick={() => setIdx((i) => Math.min(i + 1, items.length - 1))} disabled={idx === items.length - 1}>
-            Next <kbd>N</kbd>
+          {timerSec > 0 && <span className={"stat timer" + (remaining < 300 ? " low" : "")}>{mm}:{ss}</span>}
+          <button className="quiet" onClick={trySubmit}>
+            Submit exam
           </button>
         </div>
+        <div className="progress">
+          <div style={{ width: `${(100 * answered) / items.length}%` }} />
+        </div>
       </div>
+      <details className="plain">
+        <summary>{answered} answered · jump to a question</summary>
+        <div className="exam-nav">
+          {items.map((_, i) => (
+            <button key={i} className={"exam-dot" + (i === idx ? " current" : "") + (answers[i]!.picked >= 0 ? " done" : "")} onClick={() => goto(i)}>
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      </details>
+      <ExamQuestion q={q} />
+      <ChoiceList choices={q.choices} unit={q.target.unit} selected={answers[idx]!.picked >= 0 ? answers[idx]!.picked : null} submitted={false} onSelect={(i) => setAnswers((prev) => prev.map((a, j) => (j === idx ? { picked: i } : a)))} />
+      <ActionBar>
+        <button className="quiet" onClick={() => goto(idx - 1)} disabled={idx === 0}>
+          Previous
+        </button>
+        {last ? (
+          <button className="primary" onClick={trySubmit}>
+            Submit exam
+          </button>
+        ) : (
+          <button className="primary" onClick={() => goto(idx + 1)}>
+            Next <kbd>↵</kbd>
+          </button>
+        )}
+      </ActionBar>
     </div>
   );
 }
 
-/** Prompt + diagram + givens (+ first part's sub-prompt for multi-part templates). */
+/** Prompt + diagram (+ first part's sub-prompt for multi-part templates). */
 function ExamQuestion({ q }: { q: GeneratedQuestion }) {
   return (
     <>
@@ -210,10 +239,6 @@ function ExamQuestion({ q }: { q: GeneratedQuestion }) {
           <Diagram spec={q.diagram} />
         </div>
       )}
-      <div className="small muted" style={{ marginBottom: 6 }}>
-        Find: {q.target.label} {q.target.symbol && <Tex>{q.target.symbol}</Tex>}
-        {q.target.unit ? ` (${q.target.unit})` : ""}
-      </div>
     </>
   );
 }
@@ -242,35 +267,56 @@ export function ExamResultsPage() {
   for (const it of rec.items) if (it.errorId) errCounts.set(it.errorId, (errCounts.get(it.errorId) ?? 0) + 1);
   const errRows = Array.from(errCounts.entries()).sort((a, b) => b[1] - a[1]);
   const pct = Math.round((100 * rec.score) / rec.count);
+  const blank = rec.items.filter((i) => i.picked < 0).length;
   return (
-    <div className="stack">
-      <p className="small muted">
-        <Link to="/exam">Exam simulation</Link> › results
-      </p>
-      <div className="card">
-        <h1>
-          {pct}% — {rec.score} / {rec.count}
-        </h1>
-        <div className="small muted">
-          {rec.exam === "exam2" ? "Exam 2" : rec.exam === "exam1" ? "Exam 1" : "Mixed"} · {new Date(rec.finishedAt).toLocaleString()} · {Math.round((rec.finishedAt - rec.startedAt) / 60000)} min
-          {rec.timerSec ? ` of ${Math.round(rec.timerSec / 60)}` : ""} · {rec.items.filter((i) => i.picked < 0).length} blank
+    <div>
+      <PageHeader back={{ to: "/exam", label: "Exam" }} title={examLabel(rec.exam)} />
+      <div className="card center">
+        <div className="score">{pct}%</div>
+        <div className="muted small" style={{ marginTop: 6 }}>
+          {rec.score} of {rec.count} · {Math.round((rec.finishedAt - rec.startedAt) / 60000)} min{blank ? ` · ${blank} blank` : ""}
         </div>
       </div>
-      <div className="practice">
+
+      {errRows.length > 0 && (
+        <section>
+          <div className="section-title">Mistakes to drill</div>
+          <ul className="list">
+            {errRows.map(([id, n]) => {
+              const e = errorById(id);
+              return (
+                <li key={id}>
+                  <Link to={`/drill/error/${id}`} className="list-row">
+                    <div className="body">
+                      <div className="title">{e?.label ?? id}</div>
+                      <div className="sub">{e?.explanation}</div>
+                    </div>
+                    <span className="pill bad">×{n}</span>
+                    <svg className="chev" viewBox="0 0 18 18" aria-hidden="true">
+                      <path d="m7 4 5 5-5 5" />
+                    </svg>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      <section>
+        <div className="section-title">By topic</div>
         <div className="card">
-          <h2>By topic</h2>
           <table className="results-table">
             <tbody>
               {topicRows.map(({ topic, n, c }) => (
                 <tr key={topic.id}>
                   <td>
                     <Link to={`/topic/${topic.id}`}>{topic.title}</Link>
-                    <div className="small muted">{topic.chapter}</div>
                   </td>
-                  <td className="stat">
+                  <td className="stat muted small" style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                     {c}/{n}
                   </td>
-                  <td style={{ width: "40%" }}>
+                  <td style={{ width: "32%" }}>
                     <div className={"mastery" + (c / n < 0.6 ? " low" : "")}>
                       <div style={{ width: `${(100 * c) / n}%` }} />
                     </div>
@@ -280,33 +326,11 @@ export function ExamResultsPage() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section>
+        <div className="section-title">Every question</div>
         <div className="card">
-          <h2>Named mistakes you made</h2>
-          {errRows.length === 0 ? (
-            <p className="muted">None — every wrong answer (if any) was a blank or an arithmetic slip without a named cause.</p>
-          ) : (
-            <ul className="template-list">
-              {errRows.map(([id, n]) => {
-                const e = errorById(id);
-                return (
-                  <li key={id}>
-                    <div className="grow">
-                      <strong>{e?.label ?? id}</strong> <span className="badge">×{n}</span>
-                      <div className="small muted">{e?.explanation}</div>
-                    </div>
-                    <Link className="btn" to={`/drill/error/${id}`}>
-                      Drill
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      </div>
-      <div className="card">
-        <h2>Review each question</h2>
-        <ol className="review-list">
           {rec.items.map((it, i) => {
             const q = questions[i];
             if (!q) return null;
@@ -314,15 +338,17 @@ export function ExamResultsPage() {
             const picked = it.picked >= 0 ? q.choices[it.picked] : undefined;
             const err = picked?.errorId ? errorById(picked.errorId) : null;
             return (
-              <li key={i} className={"review-item " + (it.correct ? "good" : "bad")}>
-                <div className="row spread" onClick={() => setOpen(open === i ? null : i)} style={{ cursor: "pointer" }}>
-                  <span>
-                    <strong>{it.correct ? "✓" : "✗"}</strong> {t?.title ?? it.templateId} <span className="small muted">({topicById(t?.topicId ?? "")?.title})</span>
+              <div key={i} className={"review-item " + (it.correct ? "good" : "bad")}>
+                <div className="row" onClick={() => setOpen(open === i ? null : i)}>
+                  <span className="mark">{it.correct ? "✓" : "✗"}</span>
+                  <span className="grow">
+                    {t?.title ?? it.templateId}
+                    <div className="small muted">{topicById(t?.topicId ?? "")?.title}</div>
                   </span>
                   <span className="small muted">{open === i ? "hide" : "show"}</span>
                 </div>
                 {open === i && (
-                  <div className="stack" style={{ marginTop: 8 }}>
+                  <div className="review-body stack">
                     <ExamQuestion q={q} />
                     <ChoiceList choices={q.choices} unit={q.target.unit} selected={it.picked >= 0 ? it.picked : null} submitted onSelect={() => {}} />
                     {err && (
@@ -332,15 +358,15 @@ export function ExamResultsPage() {
                     )}
                     <Solution q={q} />
                     <Link className="btn" to={`/q/${it.templateId}/${randomSeed()}`}>
-                      Same type, new numbers
+                      Practice this type
                     </Link>
                   </div>
                 )}
-              </li>
+              </div>
             );
           })}
-        </ol>
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

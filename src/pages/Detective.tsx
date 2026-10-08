@@ -3,49 +3,44 @@ import { getDetective } from "../lib/storage";
 import { TRAPS } from "../content/detective/traps";
 import { FLASHCARDS } from "../content/detective/flashcards";
 
-function Stat({ mode }: { mode: string }) {
+const Chevron = () => (
+  <svg className="chev" viewBox="0 0 18 18" aria-hidden="true">
+    <path d="m7 4 5 5-5 5" />
+  </svg>
+);
+
+function stat(mode: string): string {
   const s = getDetective().modes[mode];
-  return <span className="small muted stat">{s && s.attempts ? `${s.correct}/${s.attempts} correct` : "not started"}</span>;
+  return s && s.attempts ? `${s.correct}/${s.attempts}` : "";
 }
 
 export function DetectivePage() {
-  const fc = getDetective().flashcards;
-  const seen = Object.keys(fc).length;
+  const seen = Object.keys(getDetective().flashcards).length;
+  const modes = [
+    { to: "/detective/pick", title: "Pick the equations", sub: "A problem, numbers hidden. Choose what you'd use.", meta: stat("pick") },
+    { to: "/detective/givens", title: "Givens & target", sub: "Label each number. Spot the decoys.", meta: stat("givens") },
+    { to: "/detective/recipe", title: "Build the recipe", sub: "Put the solution steps in order.", meta: stat("recipe") },
+    { to: "/detective/trap", title: "Spot the trap", sub: `${TRAPS.length} situations where the obvious equation is wrong.`, meta: stat("trap") },
+    { to: "/detective/flashcards", title: "Flashcards", sub: "Situation on the front, equations on the back.", meta: seen ? `${seen}/${FLASHCARDS.length}` : "" },
+  ];
   return (
-    <div className="stack">
+    <div>
       <h1>Equation Detective</h1>
-      <p className="muted">The formula sheet is given on the exam. The skill is recognising the situation and picking the right equations — no arithmetic here.</p>
-      <div className="mode-grid">
-        <Link to="/detective/pick" className="topic-card">
-          <div className="title">A · Pick the equations</div>
-          <div className="small">A fresh problem (numbers hidden if you like). Select the equations you'd use from a list that includes decoys.</div>
-          <Stat mode="pick" />
-        </Link>
-        <Link to="/detective/givens" className="topic-card">
-          <div className="title">B · Givens & target</div>
-          <div className="small">Tag each number with its symbol — or "not needed" — and pick the unknown. Then pick the equations.</div>
-          <Stat mode="givens" />
-        </Link>
-        <Link to="/detective/recipe" className="topic-card">
-          <div className="title">C · Build the recipe</div>
-          <div className="small">The solution plan, shuffled. Put the steps in order.</div>
-          <Stat mode="recipe" />
-        </Link>
-        <Link to="/detective/trap" className="topic-card">
-          <div className="title">D · Spot the trap</div>
-          <div className="small">{TRAPS.length} hand-written situations where the tempting equation is wrong.</div>
-          <Stat mode="trap" />
-        </Link>
-        <Link to="/detective/flashcards" className="topic-card">
-          <div className="title">Situation flashcards</div>
-          <div className="small">Front: a situation. Back: the equations and why. {FLASHCARDS.length} cards, weighted toward your misses.</div>
-          <span className="small muted stat">{seen ? `${seen}/${FLASHCARDS.length} cards seen` : "not started"}</span>
-        </Link>
-        <Link to="/equations" className="topic-card">
-          <div className="title">Equation sheet</div>
-          <div className="small">Every equation with use / don't-use cues, trigger phrases, and your detective accuracy.</div>
-        </Link>
-      </div>
+      <p className="helper">The sheet is given on the exam. The skill is knowing which equation fits the situation.</p>
+      <ul className="list mode-list">
+        {modes.map((m) => (
+          <li key={m.to}>
+            <Link to={m.to} className="list-row">
+              <div className="body">
+                <div className="title">{m.title}</div>
+                <div className="sub">{m.sub}</div>
+              </div>
+              {m.meta && <span className="meta">{m.meta}</span>}
+              <Chevron />
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

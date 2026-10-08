@@ -365,6 +365,37 @@ update it if these should be permanent.
 
 **Totals**: 108 templates, 33 trap scenarios, 48 flashcards, 538 tests.
 
+## Session 8 — Phone-first redesign ✅
+
+Research-driven UI pass (see `docs/DESIGN.md` for principles + sources).
+
+- **Shell**: bottom tab bar on phones (Practice · Detective · Exam · Equations ·
+  Settings), top nav on desktop. "Focus" routes (question, detective rounds,
+  exam run, flashcards) hide the tabs. Single 680px column everywhere.
+- **New components**: `PageHeader` (back · title · one control), `ActionBar`
+  (fixed bottom bar; self-measuring; turns green/red with the feedback),
+  `EquationLinks`, `Distractors`. Phone vs desktop is decided purely in CSS
+  (`max-width: 720px` + `hover: none`).
+- **Practice flow**: Hint and "Same type again" removed. Bar shows **Check**
+  (+ quiet "Not sure? Reveal", counted as a miss) → feedback with the named
+  mistake → **Continue** (multi-part) / **Next question**. Next only appears
+  after answering. Solution auto-opens on a miss and scrolls into view;
+  collapsed on a hit. "Why the other choices are wrong" is a disclosure.
+  Givens chips, breadcrumbs, badges, key legend removed from the task screen.
+- **Home**: one big Start/Continue button, two secondary buttons, "Watch out
+  for" top traps, Exam 2 / Exam 1 segmented topic list with mini mastery bars.
+- **Detective**: hub is a list; every mode uses the header + action bar; the
+  side instruction cards are gone (one-line helper instead).
+- **Exam**: sticky progress bar, dots behind a disclosure, bar with
+  Previous/Next/Submit; results lead with the score and "mistakes to drill".
+- **Equations**: collapsible cards (name + formula; details on tap); deep
+  links open the card.
+- Touch targets ≥ 48px, 17px base font on phones, `kbd` hidden on touch,
+  safe-area insets, theme-color meta.
+- CLAUDE.md UI lines updated to match (no hints; single column).
+- Verified: typecheck, 538 tests, headless-Chromium screenshots at 375px
+  (light/dark) and 1280px, no console errors, no horizontal overflow.
+
 ## Session 3 — Ch 6 / 13 / 7 ⏳
 ## Session 4 — Equation Detective ⏳
 ## Session 5 — Exam sim + weak spots ⏳
