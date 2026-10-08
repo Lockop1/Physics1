@@ -287,6 +287,9 @@ export const ERRORS: NamedError[] = [
   e("vector-magnitudes-added", "Added vector magnitudes directly", "Vectors add by components (or tip-to-tail). |A + B| equals |A| + |B| only when they point the same way.", "exam1"),
   e("angle-from-wrong-axis", "Angle measured from the wrong axis", "'North of east' is measured from the +x axis; 'east of north' from the +y axis. cos and sin swap when the reference axis changes.", "exam1"),
 
+  e("sig-figs-rule", "Significant-figure rule misapplied", "Multiplying/dividing: keep as many SIGNIFICANT FIGURES as the least precise factor. Adding/subtracting: keep as many DECIMAL PLACES as the least precise term.", "exam1"),
+  e("terminal-not-equilibrium", "Didn't set drag equal to weight at terminal speed", "At terminal speed the acceleration is zero, so F_D = mg. Solve ½CρAv² = mg for v.", "both"),
+
   // ---------- Exam 1 traps ----------
   e(
     "sin-cos-swap",

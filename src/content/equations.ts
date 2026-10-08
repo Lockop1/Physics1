@@ -396,6 +396,30 @@ export const EQUATIONS: Equation[] = [
     derivedFrom: ["sum-fc", "newton-2"],
   },
 
+  {
+    id: "drag-force",
+    latex: "F_D = \\tfrac12 C \\rho A v^2",
+    name: "Drag force",
+    chapter: "Ch 6",
+    variables: [v("F_D", "drag (air resistance)", "N"), v("C", "drag coefficient", "—"), v("\\rho", "density of the fluid (air ≈ 1.2 kg/m³)", "kg/m³"), v("A", "cross-sectional area facing the flow", "m²"), v("v", "speed relative to the fluid", "m/s")],
+    useWhen: ["Air resistance on a falling or moving object", "Finding how drag scales with speed (∝ v²) or area"],
+    dontUseWhen: ["You forget the ½ or the square on v", "The problem says to neglect air resistance"],
+    triggers: ["drag", "air resistance", "terminal", "skydiver", "drag coefficient"],
+    onSheet: true,
+  },
+  {
+    id: "terminal-speed",
+    latex: "v_t = \\sqrt{\\frac{2 m g}{C \\rho A}}",
+    name: "Terminal speed (derived)",
+    chapter: "Ch 6",
+    variables: [v("v_t", "terminal speed", "m/s"), v("m", "mass", "kg"), v("C, \\rho, A", "drag coefficient, fluid density, area", "—")],
+    useWhen: ["A falling object stops accelerating: drag has grown to equal the weight, so ΣF = 0"],
+    dontUseWhen: ["The object is still speeding up (then mg − F_D = ma)", "You set drag equal to mass instead of weight"],
+    triggers: ["terminal velocity", "constant speed while falling", "skydiver"],
+    onSheet: false,
+    derivedFrom: ["drag-force", "newton-2", "weight"],
+  },
+
   // ================= Gravitation (Ch 13) =================
   {
     id: "grav-force",

@@ -269,6 +269,102 @@ in the text; skipped.
 
 **Next smallest safe task**: Session 7 (coverage audit of the slides).
 
+## Session 7 — Lecture-slide coverage audit ✅
+
+All ten files in `lectures/` were read (PDF text via pdftotext; the two PPTX
+files for answers the "Pre" PDFs omit). Every worked example, clicker /
+ABCD question and concept is mapped below. **Zero MISSING items remain**;
+six templates, two equations, two errors and one topic were added in this
+session to close the gaps found.
+
+### Coverage report
+
+| Slide item | Template id(s) |
+|---|---|
+| **Ch 1–2** CQ 38 km → m; ms in a minute; 15.0 in → cm | `e1.units.length-area-volume` |
+| 85.0 mi/h → km/h; 33.0 m/s → mi/h; 120 km/h → m/s | `e1.units.speed` |
+| Sig figs (1500 g family; 12.71 × 3.46; 23.2 + 5.174; rounding) | `e1.units.sig-figs` *(added S7)* |
+| Lead 11.35 g/cm³ → kg/m³ | `e1.units.density` |
+| Scalar vs vector; equal vectors; unit vectors; CQ "which figure shows −15.79î + 12.04ĵ" | `e1.vectors.concept` |
+| Components (C = 12.0 at −60° → 6.00, −10.4); SOHCAHTOA | `e1.vectors.components` |
+| Example 1 (2,2)+(2,−4) → 4.5 at −27°; ABCD (3,2)+(−5,4) | `e1.vectors.add-subtract` |
+| Resultant of A = 5.00, B = 7.00, C = 8.50; net force 8754 "along A" | `e1.vectors.three-resultant` (figure-dependent numbers not reproduced) |
+| **Ch 3** CQ roundabout distance/displacement; racecar halfway ABCD | `e1.vectors.concept`, `e1.kin2d.chord-displacement` *(added S7)* |
+| #27 x = 4 − 2t; #35 x = 10t − 2t²; Example 3.4 x = 3t − 3t² | `e1.calculus.position-polynomial`, `e1.calculus.turning-point` |
+| Example 1 average velocity vs speed (1.36 / 2.27 m/s) | `e1.kin1d.out-and-back` *(added S7)* |
+| Example 2 boat (1.00 × 10⁵ m, 39.0, 28.0, 53.1°) | `e1.kin2d.trip` |
+| x–t slope = v; v–t slope = a; Example 3.6 v = 20t − 5t²; Quick Quiz matching | `e1.graphs.slope`, `e1.graphs.vt-graph`, `e1.graphs.concept` |
+| #58 freight train | `e1.kin1d.multi-phase` |
+| Trooper Example 3; #96 Pablo & Jacob | `e1.kin1d.chase` |
+| Free fall concepts (CQ 3, CQ 4, wrench vs feather, speed after throw) | `e1.freefall.concept` |
+| Example 5 drop 13.5 m; Example 6 stone throw (A–D) | `e1.freefall.drop`, `e1.freefall.thrown-up`, `e1.freefall.cliff-up-vs-down` |
+| Direction of acceleration (speeding up / slowing down) | `e1.graphs.concept` |
+| **Ch 4** Example 4.1 satellite chord displacement | `e1.kin2d.chord-displacement` *(added S7)* |
+| #20 bird 95 km at 45° for 3 h | `e1.kin2d.displacement-vector` |
+| Examples 4.3 / 4.4 (r(t) → v; v(t) → a) | `e1.calculus.vector-function` |
+| Example 1 plane; #28 boat; CQ 1 a_y in flight | `e1.kin2d.constant-accel`, `e1.projectiles.concept` |
+| Range / height derivation; CQ 2; 15° vs 75°; long jumper Example 2; firework 4.7 | `e1.projectiles.range-height`, `e1.projectiles.concept` |
+| Example 3 stone from building; Kilauea; #46 ski gorge | `e1.projectiles.cliff-launch` |
+| #36 crate from plane; Example 4 Waymo | `e1.projectiles.horizontal-launch` |
+| ABCD tangential velocity (clockwise ball) | `ch4.ucm.direction` |
+| CQ 3 45° = π/4; CQ 4 half revolution | `ch4.ucm.rad-deg`, `ch4.ucm.arc-length` |
+| v = 2πr/T, ω = 2π/T, v = rω; #67 fan 360 rpm | `ch4.ucm.period-speed-omega`, `ch4.ucm.ac-rpm` |
+| Non-uniform circular motion a = √(a_c² + a_T²) | `ch4.ucm.nonuniform` |
+| **Ch 5** Newton's laws / hockey puck / space station / bullet in space / bus | `ch5.concepts.which-law`, `ch5.concepts.net-force-zero` |
+| Two equal opposite forces box (CQs) | `ch5.concepts.net-force-zero` |
+| Truck vs fly; monitor-on-table pairs | `ch13.universal.concept`, `ch5.concepts.action-reaction` |
+| Weight, g_Moon; mass vs weight | `ch5.concepts.mass-vs-weight` |
+| N ≠ mg slides; incline normal | `ch5.normal.cases`, `ch5.normal.concept`, `ch5.normal.apparent-weight` |
+| Chandelier 20 kg; fish in elevator; apparent weight | `ch5.tension.hanging`, `ch5.tension.concept` |
+| Hooke 50 N/m × 1 cm | `ch5.springs.hooke` |
+| FBD slides (flat ± friction, incline ± friction) | `ch5.inclines.sliding`, `ch5.inclines.stuck`, `ch5.friction.rope-angle` |
+| Problem 40 (two 30 N forces → 1.87 m/s²) | `ch5.net-force.two-forces` |
+| 2.00 kg pushed up by 25.0 N | `ch5.net-force.pushed-up` |
+| The Runway (icy incline: a, t, v) | `ch5.inclines.sliding` |
+| Example 3a two cables (100 N → 200 N; 14.0 kg → 120 N) | `ch5.tension.two-cables` (14.0 kg case: figure geometry unknown, skipped) |
+| **Ch 6a** Traffic light 122 N | `ch5.tension.two-cables` |
+| Static/kinetic friction definitions; ABCD critical angle 20° → 0.364 | `ch5.inclines.critical-angle`, `ch5.friction.angled-force` |
+| "Find the acceleration" (T, μ_k; angled rope) | `ch5.friction.rope-angle` |
+| Problems i / ii table + hanging (frictionless; μ_k 0.2) | `ch5.pulleys.table-frictionless`, `ch5.pulleys.table-friction` |
+| Problem iii cabinet 79.0 N | `ch5.friction.cabinet-push` |
+| Textbook spring on 60° incline; Problem #6 spring + rope | `ch5.springs.incline`, `ch5.springs.rope-incline` |
+| **Ch 6b** Centripetal force concept slides | `ch6.flat-curve.concept`, `ch6.vertical-circle.concept` |
+| Roller coaster #73 (a, c) | `ch6.vertical-circle.seat-force`, `ch6.vertical-circle.min-speed` (part b "point B → 290 N": position not labelled, skipped) |
+| Ferris wheel 1.09 mg / 0.907 mg | `ch6.vertical-circle.seat-force` (Ferris skin) |
+| Flat curve ABCD 1125 N; μ_s 0.13; Example 2 v_max 13.4 / wet 0.187 | `ch6.flat-curve.centripetal-force`, `ch6.flat-curve.vmax-mu-r` |
+| Banked Example 3 27.6°; banked with friction (recitation) ; NASCAR | `ch6.banked-curve.theta-v-r`, `ch6.banked-curve.flat-vs-banked`, `ch6.banked-curve.concept` |
+| Drag force F_D = ½CρAv²; terminal velocity | `ch6.drag.force`, `ch6.drag.terminal-speed`, `ch6.drag.concept` *(topic + 3 templates added S7)* |
+| Universal gravitation; comparing forces (woman / Earth) | `ch13.universal.force`, `ch13.universal.ratio`, `ch13.universal.concept` |
+| g = GM/R²; Example 13.4 ISS 8.67; ABCD h = R_E → ¼ | `ch13.g-altitude.g-at-h`, `ch13.g-altitude.weight-fraction`, `ch13.g-altitude.planet-surface` |
+| Example 13.9 ISS speed/period; planet Nutron | `ch13.orbits.speed-period`, `ch13.orbits.angular-speed`, `ch13.orbits.planet-mass`, `ch13.orbits.concept` |
+| **Ch 7** Work definition; briefcase examples; normal/friction work | `ch7.constant-force.concept`, `ch7.constant-force.friction-work` |
+| Rank the work (four directions) | `ch7.constant-force.ranking` |
+| Scalar product Example 1 (4; 60.3°) | `ch7.constant-force.dot-product` |
+| Mr. Clean 130 J; Example 3 concrete block 28° | `ch7.constant-force.fd-cos` |
+| #25 elevator (592 kJ / −588 kJ / 0); descending-elevator ABCD | `ch7.constant-force.elevator`, `ch7.constant-force.concept` |
+| #36 F = −2.0/x; varying force; F–x graph examples (25 J, 30 J) | `ch7.varying-force.inverse-x`, `ch7.varying-force.power-law`, `ch7.varying-force.linear`, `ch7.graphs.area`, `ch7.graphs.which-interval`, `ch7.graphs.concept` |
+| Spring work | `ch7.spring-work.by-spring`, `ch7.spring-work.by-agent`, `ch7.spring-work.concept` |
+| Conservative vs non-conservative; cliff ABCD | `ch7.constant-force.concept` |
+| Friction work examples (−3.92 J; −25 J) | `ch7.constant-force.friction-work` |
+| W–E theorem example (3.5 m/s); #64 (−1.2 J) | `ch7.work-energy.final-speed`, `ch7.work-energy.friction-path`, `ch7.work-energy.friction-stop`, `ch7.work-energy.varying-force-speed` |
+| Power: wagon 18 W; elevator motor 6.49 / 7.02 × 10⁴ W; kWh | `ch7.power.average`, `ch7.power.elevator`, `ch7.power.kwh` |
+
+### Items skipped on purpose (figure-dependent, no numbers in the text)
+- Ch 1–2 "resultant of A, B, C" and "net force 8754 units"; Ch 5 Example 3a
+  14.0 kg → 120 N; Ch 6b roller coaster point B (290 N); Waymo t = 2.20 s and
+  θ = 15.3° (inconsistent with its own 14.8 m/s — treated as slide typos).
+
+### Formula sheet
+No slide shows the actual exam formula sheet, so `onSheet` flags in
+`equations.ts` remain the Session 1 best guess (editable in one place).
+
+### Topic-tree additions beyond CLAUDE.md
+`ch7.power` (Power, S3) and `ch6.drag` (Drag & terminal speed, S7) were added
+because the lectures cover them. CLAUDE.md's topic list was left as written —
+update it if these should be permanent.
+
+**Totals**: 108 templates, 33 trap scenarios, 48 flashcards, 538 tests.
+
 ## Session 3 — Ch 6 / 13 / 7 ⏳
 ## Session 4 — Equation Detective ⏳
 ## Session 5 — Exam sim + weak spots ⏳

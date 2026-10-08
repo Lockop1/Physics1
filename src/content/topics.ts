@@ -53,6 +53,7 @@ export const CHAPTERS: Chapter[] = [
       t("exam2", "Ch 6", "ch6.flat-curve", "Flat curves"),
       t("exam2", "Ch 6", "ch6.banked-curve", "Banked curves"),
       t("exam2", "Ch 6", "ch6.conical-pendulum", "Conical pendulum"),
+      t("exam2", "Ch 6", "ch6.drag", "Drag & terminal speed"),
     ],
   },
   {

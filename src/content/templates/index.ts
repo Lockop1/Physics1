@@ -110,6 +110,12 @@ import { template as e1RangeHeight } from "./exam1/rangeHeight";
 import { template as e1Horizontal } from "./exam1/horizontalLaunch";
 import { template as e1CliffLaunch } from "./exam1/cliffLaunch";
 import { template as e1ProjConcept } from "./exam1/projectileConcept";
+import { template as e1SigFigs } from "./exam1/sigFigs";
+import { template as e1OutAndBack } from "./exam1/outAndBack";
+import { template as e1Chord } from "./exam1/chordDisplacement";
+import { template as ch6TerminalSpeed } from "./ch6-applications/terminalSpeed";
+import { template as ch6DragForce } from "./ch6-applications/dragForce";
+import { template as ch6DragConcept } from "./ch6-applications/dragConcept";
 
 export const TEMPLATES: QuestionTemplate[] = [
   ch4RadDeg,
@@ -219,6 +225,13 @@ export const TEMPLATES: QuestionTemplate[] = [
   e1Horizontal,
   e1CliffLaunch,
   e1ProjConcept,
+  // Session 7 coverage additions
+  e1SigFigs,
+  e1OutAndBack,
+  e1Chord,
+  ch6TerminalSpeed,
+  ch6DragForce,
+  ch6DragConcept,
 ];
 
 const byId = new Map(TEMPLATES.map((t) => [t.id, t]));
