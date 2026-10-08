@@ -1,0 +1,234 @@
+/**
+ * Discriminated union of every diagram the renderer knows how to draw.
+ * Templates emit one of these; src/diagrams/Diagram.tsx dispatches on `kind`.
+ */
+/** Set by the Diagram component when the detective "hide numbers" toggle is on. */
+export interface HideFlag {
+  hideNumbers?: boolean;
+}
+
+export type DiagramSpec = (
+  | CircleDiagramSpec
+  | BlockForceDiagramSpec
+  | InclineDiagramSpec
+  | PulleyDiagramSpec
+  | CablesDiagramSpec
+  | VerticalBoxDiagramSpec
+  | LoopDiagramSpec
+  | FlatCurveDiagramSpec
+  | BankedDiagramSpec
+  | ConicalDiagramSpec
+  | OrbitDiagramSpec
+  | WorkAngleDiagramSpec
+  | WorkRankDiagramSpec
+  | FxGraphDiagramSpec
+  | VectorsDiagramSpec
+  | ProjectileDiagramSpec
+) &
+  HideFlag;
+
+/** Vertical circle (loop / Ferris wheel) with a marked point and its forces. */
+export interface LoopDiagramSpec extends HideFlag {
+  kind: "loop";
+  point: "top" | "bottom" | "both";
+  radiusLabel?: string;
+  /** Label for the contact force: "N" (seat) or "T" (string). */
+  forceLabel?: string;
+  /** At the top, draw the contact force pointing UP (seat under the rider, Ferris wheel) instead of toward the center. */
+  topContactUp?: boolean;
+  showForces?: boolean;
+  caption?: string;
+}
+
+/** Overhead view of a car on a flat curve. */
+export interface FlatCurveDiagramSpec extends HideFlag {
+  kind: "flat-curve";
+  radiusLabel?: string;
+  caption?: string;
+}
+
+/** Cross-section of a banked road with a car. */
+export interface BankedDiagramSpec extends HideFlag {
+  kind: "banked";
+  angleDeg: number;
+  showForces?: boolean;
+  caption?: string;
+}
+
+/** Conical pendulum: string at angle from the vertical. */
+export interface ConicalDiagramSpec extends HideFlag {
+  kind: "conical";
+  angleDeg: number; // from vertical
+  /** Label the angle as measured from the horizontal instead. */
+  fromHorizontal?: boolean;
+  lengthLabel?: string;
+  showForces?: boolean;
+  caption?: string;
+}
+
+/** Planet with a satellite orbit at altitude h. */
+export interface OrbitDiagramSpec extends HideFlag {
+  kind: "orbit";
+  altitudeLabel?: string;
+  radiusLabel?: string;
+  /** Hide the altitude and show just the orbit radius. */
+  caption?: string;
+}
+
+/** A force at angle θ to a displacement. */
+export interface WorkAngleDiagramSpec extends HideFlag {
+  kind: "work-angle";
+  angleDeg: number; // angle between F and d (0–180)
+  forceLabel?: string;
+  caption?: string;
+}
+
+/** Four labelled panels with a force at different angles to a rightward displacement. */
+export interface WorkRankDiagramSpec extends HideFlag {
+  kind: "work-rank";
+  panels: { label: string; angleDeg: number }[];
+}
+
+/** Piecewise-linear graph (F–x by default; also used for v–t with custom axis labels) with a highlighted interval. */
+export interface FxGraphDiagramSpec extends HideFlag {
+  kind: "fx-graph";
+  points: { x: number; F: number }[];
+  from?: number;
+  to?: number;
+  xUnit?: string;
+  fUnit?: string;
+  /** Axis labels, default "x" / "F". */
+  xLabel?: string;
+  yLabel?: string;
+}
+
+/** One or more vectors drawn from the origin, with their angles labelled from a stated reference axis. */
+export interface VectorsDiagramSpec extends HideFlag {
+  kind: "vectors";
+  vectors: {
+    label: string;
+    /** magnitude, relative (the diagram normalises) */
+    magnitude: number;
+    /** direction, degrees CCW from +x (math convention) */
+    angleDeg: number;
+    /** How the angle is labelled: from +x (default), from +y, from −y, from −x. */
+    ref?: "+x" | "+y" | "-y" | "-x";
+    /** Angle text to show (e.g. "30°"); omitted → no arc. */
+    angleLabel?: string;
+  }[];
+  /** Draw the resultant (sum) dashed. */
+  showResultant?: boolean;
+  caption?: string;
+}
+
+/** Projectile: launched from a height (0 = level ground) at an angle. */
+export interface ProjectileDiagramSpec extends HideFlag {
+  kind: "projectile";
+  /** Launch height relative to landing level (m, relative; 0 = level ground). */
+  launchHeight: number;
+  /** Launch angle (degrees, positive above horizontal, negative below). */
+  angleDeg: number;
+  /** Label for the angle, e.g. "30°" or "θ"; and whether it's drawn from the vertical. */
+  angleLabel?: string;
+  angleFromVertical?: boolean;
+  speedLabel?: string;
+  heightLabel?: string;
+  rangeLabel?: string;
+  caption?: string;
+}
+
+/** A force arrow applied to a block: angle in degrees, 0 = +x, positive = above horizontal. */
+export interface ForceArrow {
+  label: string; // "F", "T", "F_1"
+  angleDeg: number;
+  /** Relative length 0.5–1.5 (default 1). */
+  scale?: number;
+}
+
+/** Block on a flat surface with one or more applied forces. */
+export interface BlockForceDiagramSpec extends HideFlag {
+  kind: "block-force";
+  forces: ForceArrow[];
+  /** Draw a rough-surface hatch and label μ. */
+  rough?: boolean;
+  massLabel?: string;
+  /** Draw N and mg arrows too. */
+  showNW?: boolean;
+  caption?: string;
+}
+
+/** Block on an incline, angle drawn to scale. */
+export interface InclineDiagramSpec extends HideFlag {
+  kind: "incline";
+  angleDeg: number;
+  /** Spring attached from the block to the top of the incline. */
+  spring?: boolean;
+  /** Rope attached to the block, pulling down-slope or up-slope. */
+  rope?: "down" | "up";
+  rough?: boolean;
+  massLabel?: string;
+  /** Arrow showing motion/acceleration direction along the slope. */
+  motion?: "down" | "up";
+  caption?: string;
+}
+
+/** Block on a table, rope over a pulley at the edge, hanging mass. */
+export interface PulleyDiagramSpec extends HideFlag {
+  kind: "pulley";
+  m1Label: string;
+  m2Label: string;
+  rough?: boolean;
+  /** Label for the hanging height, e.g. "h = 1.00 m". */
+  heightLabel?: string;
+  /** Classic Atwood: both masses hang. */
+  atwood?: boolean;
+  caption?: string;
+}
+
+/** Object hanging from two cables. Angles are measured from the horizontal (ceiling). */
+export interface CablesDiagramSpec extends HideFlag {
+  kind: "cables";
+  leftAngleDeg: number; // from horizontal; 0 = horizontal cable
+  rightAngleDeg: number;
+  leftLabel: string;
+  rightLabel: string;
+  loadLabel: string;
+  /** Label the angles as measured from the vertical instead (values still from horizontal). */
+  anglesFromVertical?: boolean;
+  caption?: string;
+}
+
+/** A box with vertical forces: hanging from a rope, standing in an elevator, or pushed up. */
+export interface VerticalBoxDiagramSpec extends HideFlag {
+  kind: "vertical-box";
+  mode: "hanging" | "elevator" | "pushed-up";
+  accel?: "up" | "down" | "none";
+  massLabel?: string;
+  forceLabel?: string; // "T", "N", "F"
+  caption?: string;
+}
+
+export interface CircleDiagramSpec extends HideFlag {
+  kind: "circle";
+  /** Label for the radius line, e.g. "r = 10.0 cm" or "d = 200 m". */
+  radiusLabel?: string;
+  /** Draw the radius as a diameter line across the circle. */
+  showDiameter?: boolean;
+  /** Direction of motion. Omit for no motion arrow. */
+  direction?: "cw" | "ccw";
+  /** Angle (degrees, math convention, 0 = +x, CCW) of a marked point on the circle. */
+  markAngleDeg?: number;
+  /** Label for the marked point, e.g. "P". */
+  markLabel?: string;
+  /** Show the velocity arrow at the marked point. */
+  showVelocity?: boolean;
+  /** Show the centripetal acceleration arrow at the marked point. */
+  showCentripetal?: boolean;
+  /** Show a tangential acceleration arrow (opposing or along motion). */
+  tangential?: "along" | "opposing";
+  /** Arc from 0 to this angle (degrees), e.g. to illustrate s = rθ. */
+  arcDeg?: number;
+  arcLabel?: string;
+  /** Optional caption below the figure. */
+  caption?: string;
+}
