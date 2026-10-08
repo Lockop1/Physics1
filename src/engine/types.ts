@@ -36,6 +36,22 @@ export interface SolutionStep {
   value?: number;
 }
 
+/**
+ * One part of a multi-part question ("(a) find a, (b) find T, (c) find v").
+ * Each part is checked separately. When `parts` is present on a question, the
+ * question's top-level target/answer/choices/solution mirror parts[0] so that
+ * single-answer consumers (exam sim, detective) still work.
+ */
+export interface QuestionPart {
+  label: string; // "(a)"
+  prompt: string; // the sub-question, inline $...$ allowed
+  target: Target;
+  answer: number | string;
+  choices: Choice[];
+  solution: SolutionStep[];
+  hints?: string[];
+}
+
 export interface GeneratedQuestion {
   templateId: string;
   seed: number;
@@ -53,6 +69,8 @@ export interface GeneratedQuestion {
   solution: SolutionStep[];
   /** Short note shown with the solution, e.g. "The mass was not needed." */
   note?: string;
+  /** Multi-part questions. See QuestionPart. */
+  parts?: QuestionPart[];
 }
 
 export interface QuestionTemplate {

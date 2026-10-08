@@ -152,6 +152,111 @@ export const ERRORS: NamedError[] = [
     "both",
   ),
 
+  // ---------- Ch 5 / 6 additions (Session 2) ----------
+  e(
+    "third-law-same-object",
+    "Paired two forces acting on the same object",
+    "A third-law pair is two forces between the SAME two objects, acting on different objects. The normal force and the weight both act on the monitor, so they are not a pair (they just happen to balance).",
+  ),
+  e(
+    "third-law-wrong-partner",
+    "Right kind of force, wrong pair of objects",
+    "The reaction to 'A pushes on B' is 'B pushes on A' — same type of force, same magnitude, opposite direction, swapped objects. This choice swaps in a different object or a different kind of force.",
+  ),
+  e(
+    "zero-net-force-means-rest",
+    "Assumed zero net force means at rest",
+    "ΣF = 0 means zero acceleration: the object is either at rest OR moving at constant velocity. Newton's first law does not require it to be stationary.",
+  ),
+  e(
+    "force-required-for-motion",
+    "Assumed a net force is needed to keep moving",
+    "No net force is needed to maintain constant velocity. A net force is needed only to CHANGE velocity (speed up, slow down, or turn).",
+  ),
+  e(
+    "wrong-law-number",
+    "Attributed the situation to the wrong law",
+    "First law: no net force → constant velocity. Second law: net force → acceleration (ΣF = ma). Third law: forces come in equal-and-opposite pairs between two objects.",
+  ),
+  e(
+    "tension-equals-weight",
+    "Assumed T = mg while accelerating",
+    "T = mg only when the vertical acceleration is zero. Write ΣF_y = ma_y: T − mg = ma_y, so T is larger when accelerating up and smaller when accelerating down.",
+  ),
+  e(
+    "elevator-sign",
+    "Wrong sign on the acceleration term",
+    "Accelerating upward means a_y > 0 so T (or N) = m(g + a); accelerating downward means a_y < 0 so T = m(g − a). The sign was flipped here. (An elevator moving down but slowing is accelerating UP.)",
+  ),
+  e(
+    "angle-complement",
+    "Used the complementary angle",
+    "The angle was measured from the wrong reference (ceiling vs vertical, horizontal vs incline). cos θ and sin θ swap when you use 90° − θ.",
+  ),
+  e(
+    "forgot-friction",
+    "Left friction out of ΣF",
+    "The surface is rough, so a friction force opposing the (impending) motion must appear in the force sum along the surface.",
+  ),
+  e(
+    "forgot-gravity-component",
+    "Ignored the gravity component along the incline",
+    "On an incline, gravity has a component mg sin θ along the slope that must appear in ΣF_x along with tension, spring force, or friction.",
+  ),
+  e(
+    "rope-direction-flip",
+    "Rope/tension direction reversed",
+    "Check which way the rope pulls. A rope pulling down-slope ADDS to mg sin θ; a rope pulling up-slope opposes it. The sign of T was flipped here.",
+  ),
+  e(
+    "added-magnitudes-no-components",
+    "Added force magnitudes without taking components",
+    "Forces are vectors. Resolve each into x and y components first, then sum per axis; adding magnitudes only works when the forces are parallel.",
+  ),
+  e(
+    "critical-angle-sin-not-tan",
+    "Used sin θ (or cos θ) instead of tan θ",
+    "At the critical angle, mg sin θ = μ_s mg cos θ, so μ_s = tan θ_c — not sin θ_c.",
+  ),
+  e(
+    "forgot-sqrt",
+    "Forgot the square root",
+    "v² = v₀² + 2aΔx gives v SQUARED. Take the square root to get the speed.",
+    "both",
+  ),
+  e(
+    "treated-as-free-fall",
+    "Treated the hanging mass as free fall (a = g)",
+    "The hanging mass is attached to another mass by the rope, so it accelerates at the system's acceleration a = m₂g/(m₁ + m₂), not at g.",
+  ),
+  e(
+    "static-max-not-needed",
+    "Reported μ_s N when friction only balances a smaller force",
+    "Static friction adjusts to whatever is needed to prevent motion, up to μ_s N. If the object isn't on the verge of slipping, f_s equals the force it balances (e.g. mg sin θ), not μ_s N.",
+  ),
+  e(
+    "pushed-up-forgot-gravity",
+    "Forgot gravity in the vertical force sum",
+    "A vertical push doesn't act alone — weight mg pulls down. Use ΣF_y = F − mg = ma, not F = ma.",
+  ),
+
+  e(
+    "kinematics-missing-half",
+    "Dropped the ½ in x = ½at²",
+    "Starting from rest with constant acceleration, the displacement is ½at², not at². Half the distance was doubled here.",
+    "both",
+  ),
+  e(
+    "ignored-force-angle",
+    "Used the whole force instead of its component",
+    "Only the component of the force along the surface (F cos θ) pushes the block along it; the perpendicular part (F sin θ) changes the normal force instead.",
+  ),
+  e(
+    "vertical-component-sign",
+    "Vertical component added with the wrong sign",
+    "A force pushing DOWN at an angle increases N (N = mg + F sin θ); a force pulling UP at an angle decreases it (N = mg − F sin θ). The sign was flipped.",
+  ),
+
   // ---------- Exam 1 traps ----------
   e(
     "sin-cos-swap",

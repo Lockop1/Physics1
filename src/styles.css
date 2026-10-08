@@ -581,3 +581,26 @@ textarea.json {
     display: none;
   }
 }
+
+/* ---------- multi-part ---------- */
+.part {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+.part.active {
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+}
+.part-prompt {
+  margin-bottom: 6px;
+}
+.part-solution {
+  margin: 6px 0;
+}
+.part-solution summary {
+  cursor: pointer;
+}
+.diagram-wrap svg {
+  max-height: 260px;
+}

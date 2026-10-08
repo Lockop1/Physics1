@@ -7,12 +7,12 @@ import { errorById } from "../content/errors";
 import { checkNumeric } from "../engine/check";
 import { fmtDisplay } from "../engine/params";
 import { randomSeed } from "../engine/rng";
+import type { GeneratedQuestion, QuestionPart } from "../engine/types";
 import { getSettings, recordAttempt, setLastQuestion, updateSettings } from "../lib/storage";
-import { RichText } from "../lib/latex";
+import { RichText, Tex } from "../lib/latex";
 import { Diagram } from "../diagrams/Diagram";
 import { ChoiceList } from "../components/ChoiceList";
-import { Solution } from "../components/Solution";
-import { Tex } from "../lib/latex";
+import { Solution, PartSolution } from "../components/Solution";
 
 type Mode = "mcq" | "free";
 
@@ -37,18 +37,31 @@ export function PracticePage() {
   return <Question key={`${templateId}/${seed}`} templateId={templateId} seed={seed} />;
 }
 
+interface PartState {
+  selected: number | null;
+  typed: string;
+  submitted: boolean;
+  correct: boolean | null;
+  errorId: string | null;
+}
+const freshPart = (): PartState => ({ selected: null, typed: "", submitted: false, correct: null, errorId: null });
+
+/** Normalise a question into a list of parts (single-answer questions become one unlabeled part). */
+function partsOf(q: GeneratedQuestion): QuestionPart[] {
+  if (q.parts && q.parts.length > 0) return q.parts;
+  return [{ label: "", prompt: "", target: q.target, answer: q.answer, choices: q.choices, solution: q.solution }];
+}
+
 function Question({ templateId, seed }: { templateId: string; seed: number }) {
   const navigate = useNavigate();
   const template = templateById(templateId);
   const q = useMemo(() => buildQuestion(templateId, seed), [templateId, seed]);
+  const parts = useMemo(() => (q ? partsOf(q) : []), [q]);
+  const multi = !!q?.parts;
   const [mode, setMode] = useState<Mode>(() => getSettings().defaultMode);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [typed, setTyped] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [correct, setCorrect] = useState<boolean | null>(null);
+  const [states, setStates] = useState<PartState[]>(() => parts.map(freshPart));
   const [hintsShown, setHintsShown] = useState(0);
   const [showSolution, setShowSolution] = useState(false);
-  const [pickedError, setPickedError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -57,34 +70,42 @@ function Question({ templateId, seed }: { templateId: string; seed: number }) {
 
   const isConceptual = template?.kind === "conceptual" || typeof q?.answer === "string";
   const effectiveMode: Mode = isConceptual ? "mcq" : mode;
+  const activeIndex = states.findIndex((s) => !s.submitted); // first unsubmitted part, -1 when done
+  const allDone = activeIndex === -1;
+
+  const updatePart = (i: number, patch: Partial<PartState>) => setStates((prev) => prev.map((s, j) => (j === i ? { ...s, ...patch } : s)));
 
   const submit = useCallback(() => {
-    if (!q || submitted) return;
+    if (!q || activeIndex === -1) return;
+    const part = parts[activeIndex]!;
+    const st = states[activeIndex]!;
     let ok = false;
     let errorId: string | undefined;
-    if (effectiveMode === "mcq") {
-      if (selected === null) return;
-      const c = q.choices[selected];
+    if (effectiveMode === "mcq" || typeof part.answer === "string") {
+      if (st.selected === null) return;
+      const c = part.choices[st.selected];
       if (!c) return;
       ok = c.correct;
       errorId = c.errorId;
     } else {
-      if (typeof q.answer !== "number") return;
-      const res = checkNumeric(typed, q.answer);
+      const res = checkNumeric(st.typed, part.answer);
       if (res.parsed === null) return;
       ok = res.correct;
-      // if the typed value matches a distractor, attribute the named error
       if (!ok) {
-        const hit = q.choices.find((c) => !c.correct && typeof c.value === "number" && checkNumeric(res.parsed as number, c.value).correct);
+        const hit = part.choices.find((c) => !c.correct && typeof c.value === "number" && checkNumeric(res.parsed as number, c.value).correct);
         errorId = hit?.errorId;
       }
     }
-    setSubmitted(true);
-    setCorrect(ok);
-    setPickedError(errorId ?? null);
+    const next = states.map((s, j) => (j === activeIndex ? { ...s, submitted: true, correct: ok, errorId: errorId ?? null } : s));
+    setStates(next);
     if (!ok) setShowSolution(true);
-    recordAttempt(templateId, ok, errorId);
-  }, [q, submitted, effectiveMode, selected, typed, templateId]);
+    // record once, when the last part is submitted
+    if (next.every((s) => s.submitted)) {
+      const allCorrect = next.every((s) => s.correct);
+      const firstErr = next.find((s) => s.errorId)?.errorId ?? undefined;
+      recordAttempt(templateId, allCorrect, firstErr);
+    }
+  }, [q, parts, states, activeIndex, effectiveMode, templateId]);
 
   const next = useCallback(() => {
     if (!template) return;
@@ -104,9 +125,12 @@ function Question({ templateId, seed }: { templateId: string; seed: number }) {
         return;
       }
       if (typing) return;
-      if (/^[1-5]$/.test(e.key) && effectiveMode === "mcq" && !submitted && q) {
-        const i = Number(e.key) - 1;
-        if (i < q.choices.length) setSelected(i);
+      if (/^[1-5]$/.test(e.key) && activeIndex !== -1) {
+        const part = parts[activeIndex]!;
+        if (effectiveMode === "mcq" || typeof part.answer === "string") {
+          const i = Number(e.key) - 1;
+          if (i < part.choices.length) updatePart(activeIndex, { selected: i });
+        }
       } else if (e.key === "n" || e.key === "N") next();
       else if (e.key === "h" || e.key === "H") setHintsShown((h) => Math.min(h + 1, q?.hints.length ?? 0));
       else if (e.key === "s" || e.key === "S") setShowSolution(true);
@@ -114,11 +138,13 @@ function Question({ templateId, seed }: { templateId: string; seed: number }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [submit, next, sameType, effectiveMode, submitted, q]);
+  }, [submit, next, sameType, effectiveMode, activeIndex, parts, q]);
 
   if (!template || !q) return <p>Unknown question type: {templateId}</p>;
   const topic = topicById(template.topicId);
-  const err = pickedError ? errorById(pickedError) : null;
+  const activeState = activeIndex === -1 ? null : states[activeIndex]!;
+  const activePart = activeIndex === -1 ? null : parts[activeIndex]!;
+  const canSubmit = activePart && activeState ? (effectiveMode === "mcq" || typeof activePart.answer === "string" ? activeState.selected !== null : activeState.typed.trim() !== "") : false;
 
   return (
     <div>
@@ -131,13 +157,13 @@ function Question({ templateId, seed }: { templateId: string; seed: number }) {
       <div className="practice">
         <div className="card">
           <div className="row spread" style={{ marginBottom: 10 }}>
-            <span className="badge">{template.kind}</span>
+            <span className="badge">{template.kind}{multi ? ` · ${parts.length} parts` : ""}</span>
             {!isConceptual && (
               <div className="toggle" role="group" aria-label="answer mode">
-                <button className={effectiveMode === "mcq" ? "on" : ""} onClick={() => { setMode("mcq"); updateSettings({ defaultMode: "mcq" }); }} disabled={submitted}>
+                <button className={effectiveMode === "mcq" ? "on" : ""} onClick={() => { setMode("mcq"); updateSettings({ defaultMode: "mcq" }); }} disabled={states.some((s) => s.submitted)}>
                   Multiple choice
                 </button>
-                <button className={effectiveMode === "free" ? "on" : ""} onClick={() => { setMode("free"); updateSettings({ defaultMode: "free" }); setTimeout(() => inputRef.current?.focus(), 0); }} disabled={submitted}>
+                <button className={effectiveMode === "free" ? "on" : ""} onClick={() => { setMode("free"); updateSettings({ defaultMode: "free" }); setTimeout(() => inputRef.current?.focus(), 0); }} disabled={states.some((s) => s.submitted)}>
                   Type answer
                 </button>
               </div>
@@ -161,37 +187,69 @@ function Question({ templateId, seed }: { templateId: string; seed: number }) {
               ))}
             </div>
           )}
-          <div className="small muted" style={{ marginBottom: 6 }}>
-            Find: {q.target.label} {q.target.symbol && <Tex>{q.target.symbol}</Tex>}
-            {q.target.unit ? ` (${q.target.unit})` : ""}
-          </div>
 
-          {effectiveMode === "mcq" ? (
-            <ChoiceList choices={q.choices} unit={q.target.unit} selected={selected} submitted={submitted} onSelect={setSelected} />
-          ) : (
-            <div className="free-input">
-              <input ref={inputRef} type="text" inputMode="decimal" placeholder="your answer" value={typed} onChange={(e) => setTyped(e.target.value)} disabled={submitted} autoFocus />
-              <span className="muted">{q.target.unit}</span>
-              <span className="small muted">(±2%)</span>
-            </div>
-          )}
-
-          {submitted && (
-            <div className={"feedback " + (correct ? "good" : "bad")}>
-              <div className="label">{correct ? "Correct!" : "Not quite."}</div>
-              {!correct && err && (
-                <div>
-                  <strong>{err.label}.</strong> {err.explanation}
+          {parts.map((part, i) => {
+            const st = states[i]!;
+            const isActive = i === activeIndex;
+            const visible = i <= Math.max(activeIndex === -1 ? parts.length - 1 : activeIndex, 0);
+            if (!visible) return null;
+            const stringAnswer = typeof part.answer === "string";
+            const useMcq = effectiveMode === "mcq" || stringAnswer;
+            const err = st.errorId ? errorById(st.errorId) : null;
+            return (
+              <div key={i} className={multi ? "part" + (isActive ? " active" : "") : ""}>
+                {multi && (
+                  <div className="part-prompt">
+                    <strong>{part.label}</strong> <RichText text={part.prompt} />
+                  </div>
+                )}
+                <div className="small muted" style={{ marginBottom: 6 }}>
+                  Find: {part.target.label} {part.target.symbol && <Tex>{part.target.symbol}</Tex>}
+                  {part.target.unit ? ` (${part.target.unit})` : ""}
                 </div>
-              )}
-              {!correct && !err && effectiveMode === "free" && typeof q.answer === "number" && (
-                <div>
-                  Expected <RichText text={fmtDisplay(q.answer)} /> {q.target.unit}.
-                </div>
-              )}
-              {!correct && !err && effectiveMode === "mcq" && <div>See the worked solution below.</div>}
-            </div>
-          )}
+                {useMcq ? (
+                  <ChoiceList choices={part.choices} unit={part.target.unit} selected={st.selected} submitted={st.submitted} onSelect={(sel) => updatePart(i, { selected: sel })} />
+                ) : (
+                  <div className="free-input">
+                    <input
+                      ref={isActive ? inputRef : undefined}
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="your answer"
+                      value={st.typed}
+                      onChange={(e) => updatePart(i, { typed: e.target.value })}
+                      disabled={st.submitted}
+                      autoFocus={isActive}
+                    />
+                    <span className="muted">{part.target.unit}</span>
+                    <span className="small muted">(±2%)</span>
+                  </div>
+                )}
+                {st.submitted && (
+                  <div className={"feedback " + (st.correct ? "good" : "bad")}>
+                    <div className="label">{st.correct ? "Correct!" : "Not quite."}</div>
+                    {!st.correct && err && (
+                      <div>
+                        <strong>{err.label}.</strong> {err.explanation}
+                      </div>
+                    )}
+                    {!st.correct && !err && !useMcq && typeof part.answer === "number" && (
+                      <div>
+                        Expected <RichText text={fmtDisplay(part.answer)} /> {part.target.unit}.
+                      </div>
+                    )}
+                    {!st.correct && !err && useMcq && <div>See the worked solution.</div>}
+                  </div>
+                )}
+                {multi && st.submitted && showSolution && (
+                  <details className="part-solution" open={!st.correct}>
+                    <summary className="small muted">Solution for {part.label}</summary>
+                    <PartSolution part={part} />
+                  </details>
+                )}
+              </div>
+            );
+          })}
 
           {hintsShown > 0 && (
             <div>
@@ -205,9 +263,9 @@ function Question({ templateId, seed }: { templateId: string; seed: number }) {
           )}
 
           <div className="actions">
-            {!submitted && (
-              <button className="primary" onClick={submit} disabled={effectiveMode === "mcq" ? selected === null : !typed.trim()}>
-                Submit <kbd>↵</kbd>
+            {!allDone && (
+              <button className="primary" onClick={submit} disabled={!canSubmit}>
+                Submit{multi && activePart ? ` ${activePart.label}` : ""} <kbd>↵</kbd>
               </button>
             )}
             <button onClick={() => setHintsShown((h) => Math.min(h + 1, q.hints.length))} disabled={hintsShown >= q.hints.length}>
@@ -216,7 +274,7 @@ function Question({ templateId, seed }: { templateId: string; seed: number }) {
             <button onClick={() => setShowSolution(true)} disabled={showSolution}>
               Show solution <kbd>S</kbd>
             </button>
-            <button className={submitted ? "primary" : ""} onClick={next}>
+            <button className={allDone ? "primary" : ""} onClick={next}>
               Next <kbd>N</kbd>
             </button>
             <button onClick={sameType}>
