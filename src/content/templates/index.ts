@@ -36,6 +36,53 @@ import { template as ch5Hooke } from "./ch5-newton/hookeBasics";
 import { template as ch5SpringIncline } from "./ch5-newton/springIncline";
 import { template as ch5SpringRope } from "./ch5-newton/springRopeIncline";
 
+import { template as ch6SeatForce } from "./ch6-applications/seatForce";
+import { template as ch6MinSpeed } from "./ch6-applications/minSpeedLoop";
+import { template as ch6VerticalConcept } from "./ch6-applications/verticalCircleConcept";
+import { template as ch6FlatCurve } from "./ch6-applications/flatCurve";
+import { template as ch6CentripetalCar } from "./ch6-applications/centripetalForceCar";
+import { template as ch6FlatConcept } from "./ch6-applications/flatCurveConcept";
+import { template as ch6Banked } from "./ch6-applications/bankedCurve";
+import { template as ch6FlatVsBanked } from "./ch6-applications/flatVsBanked";
+import { template as ch6BankedConcept } from "./ch6-applications/bankedConcept";
+import { template as ch6Conical } from "./ch6-applications/conicalPendulum";
+import { template as ch6ConicalSpeed } from "./ch6-applications/conicalSpeedPeriod";
+import { template as ch6ConicalConcept } from "./ch6-applications/conicalConcept";
+
+import { template as ch13Ratio } from "./ch13-gravitation/ratioConcept";
+import { template as ch13Force } from "./ch13-gravitation/gravForce";
+import { template as ch13Concept } from "./ch13-gravitation/thirdLawGravity";
+import { template as ch13GAltitude } from "./ch13-gravitation/gAtAltitude";
+import { template as ch13WeightFraction } from "./ch13-gravitation/weightFraction";
+import { template as ch13PlanetG } from "./ch13-gravitation/planetSurfaceG";
+import { template as ch13OrbitSpeed } from "./ch13-gravitation/orbitSpeedPeriod";
+import { template as ch13OrbitOmega } from "./ch13-gravitation/orbitAngularSpeed";
+import { template as ch13PlanetMass } from "./ch13-gravitation/planetMass";
+import { template as ch13OrbitConcept } from "./ch13-gravitation/orbitConcept";
+
+import { template as ch7WorkAngle } from "./ch7-work/workAngle";
+import { template as ch7Elevator } from "./ch7-work/elevatorWork";
+import { template as ch7FrictionWork } from "./ch7-work/frictionWork";
+import { template as ch7Ranking } from "./ch7-work/workRanking";
+import { template as ch7WorkConcept } from "./ch7-work/workConcept";
+import { template as ch7DotProduct } from "./ch7-work/dotProduct";
+import { template as ch7PowerLaw } from "./ch7-work/powerLawForce";
+import { template as ch7InverseX } from "./ch7-work/inverseXForce";
+import { template as ch7Linear } from "./ch7-work/linearForce";
+import { template as ch7GraphArea } from "./ch7-work/fxGraphArea";
+import { template as ch7GraphInterval } from "./ch7-work/fxGraphConcept";
+import { template as ch7GraphConcept } from "./ch7-work/graphConcept";
+import { template as ch7SpringWork } from "./ch7-work/springWork";
+import { template as ch7SpringWorkOn } from "./ch7-work/springWorkOn";
+import { template as ch7SpringConcept } from "./ch7-work/springConcept";
+import { template as ch7WESpeed } from "./ch7-work/workEnergySpeed";
+import { template as ch7WEVarying } from "./ch7-work/varyingForceSpeed";
+import { template as ch7FrictionPath } from "./ch7-work/frictionPath";
+import { template as ch7FrictionStop } from "./ch7-work/frictionStop";
+import { template as ch7PowerAvg } from "./ch7-work/powerAverage";
+import { template as ch7PowerElevator } from "./ch7-work/powerElevator";
+import { template as ch7Kwh } from "./ch7-work/kwh";
+
 export const TEMPLATES: QuestionTemplate[] = [
   ch4RadDeg,
   ch4ArcLength,
@@ -69,6 +116,53 @@ export const TEMPLATES: QuestionTemplate[] = [
   ch5Hooke,
   ch5SpringIncline,
   ch5SpringRope,
+  // Ch 6
+  ch6SeatForce,
+  ch6MinSpeed,
+  ch6VerticalConcept,
+  ch6FlatCurve,
+  ch6CentripetalCar,
+  ch6FlatConcept,
+  ch6Banked,
+  ch6FlatVsBanked,
+  ch6BankedConcept,
+  ch6Conical,
+  ch6ConicalSpeed,
+  ch6ConicalConcept,
+  // Ch 13
+  ch13Ratio,
+  ch13Force,
+  ch13Concept,
+  ch13GAltitude,
+  ch13WeightFraction,
+  ch13PlanetG,
+  ch13OrbitSpeed,
+  ch13OrbitOmega,
+  ch13PlanetMass,
+  ch13OrbitConcept,
+  // Ch 7
+  ch7WorkAngle,
+  ch7Elevator,
+  ch7FrictionWork,
+  ch7Ranking,
+  ch7WorkConcept,
+  ch7DotProduct,
+  ch7PowerLaw,
+  ch7InverseX,
+  ch7Linear,
+  ch7GraphArea,
+  ch7GraphInterval,
+  ch7GraphConcept,
+  ch7SpringWork,
+  ch7SpringWorkOn,
+  ch7SpringConcept,
+  ch7WESpeed,
+  ch7WEVarying,
+  ch7FrictionPath,
+  ch7FrictionStop,
+  ch7PowerAvg,
+  ch7PowerElevator,
+  ch7Kwh,
 ];
 
 const byId = new Map(TEMPLATES.map((t) => [t.id, t]));

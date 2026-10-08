@@ -257,6 +257,22 @@ export const ERRORS: NamedError[] = [
     "A force pushing DOWN at an angle increases N (N = mg + F sin θ); a force pulling UP at an angle decreases it (N = mg − F sin θ). The sign was flipped.",
   ),
 
+  // ---------- Ch 6 / 13 / 7 additions (Session 3) ----------
+  e("km-not-converted", "km used as m", "Altitudes and radii given in km must be converted to meters (×1000) before combining with R_E = 6.37 × 10⁶ m or using SI constants."),
+  e("ratio-inverted", "Ratio inverted", "The factor was computed upside down (e.g. 4 instead of 1/4). Check which quantity got bigger and which got smaller."),
+  e("centripetal-as-extra-force", "Treated mv²/r as an extra force", "mv²/r is the NET force required for circular motion, not an additional outward or inward force on the free-body diagram. Only real forces (N, mg, T, friction) go on the diagram; their radial sum equals mv²/r."),
+  e("orbit-mass-matters", "Thought the satellite's mass matters", "In GMm/r² = mv²/r the satellite's mass cancels. Orbital speed and period depend only on the central mass and the orbit radius."),
+  e("weightless-means-no-gravity", "Assumed 'weightless' means no gravity", "Astronauts in orbit still have weight — gravity is what keeps them in orbit (g ≈ 8.7 m/s² at the ISS). They feel weightless because they and the station are in free fall together."),
+  e("integrated-wrong-power", "Integration slip (wrong power of x)", "∫ a xⁿ dx = a xⁿ⁺¹/(n+1). The power must go UP by one and be divided by the new power — here it was differentiated, or the exponent wasn't raised."),
+  e("log-of-difference", "ln of a difference instead of a ratio", "∫ dx/x = ln x, so the definite integral is ln(x_f) − ln(x_i) = ln(x_f / x_i) — not ln(x_f − x_i)."),
+  e("ignored-negative-area", "Counted area below the axis as positive", "Where F is negative the force opposes the motion and the work is negative. The area below the x-axis subtracts from the total."),
+  e("spring-work-missing-half", "Dropped the ½ in ½kx²", "The spring force grows linearly from 0 to kx, so the work is the triangle area ½kx², not kx·x."),
+  e("work-by-vs-on-spring", "Confused work BY the spring with work ON it", "Stretching a spring from its natural length, the spring does NEGATIVE work (−½kx²) while the external agent does +½kx². The sign was swapped."),
+  e("minutes-not-converted", "Minutes used as seconds", "Power is in watts = joules per SECOND. Convert the time interval to seconds (×60) first."),
+  e("gravity-work-sign", "Wrong sign for the work done by gravity", "Gravity does negative work when the object rises (force down, displacement up) and positive work when it falls. The sign here is reversed."),
+  e("power-forgot-friction", "Left friction out of the lifting force", "At constant speed the cable must supply T = Mg + f (friction opposes the motion), so P = (Mg + f)v. Friction was omitted."),
+  e("kwh-units", "Mixed W, kW, and kWh", "Energy in kWh = power in kW × hours. Convert watts to kilowatts (÷1000) before multiplying by hours."),
+
   // ---------- Exam 1 traps ----------
   e(
     "sin-cos-swap",

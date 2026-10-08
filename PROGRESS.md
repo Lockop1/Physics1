@@ -93,6 +93,57 @@ without its figure; skipped.
 
 **Next smallest safe task**: Session 3 (Ch 6 / 13 / 7).
 
+## Session 3 — Ch 6 circular dynamics, Ch 13 gravitation, Ch 7 work ✅
+
+**Source material used**: `lectures/Chapter-6b Applications of Newton's Laws(2) & Gravitation`
+and `Chapter-7 Work & Kinetic Energy`. Every worked example with a published
+answer became a golden test: roller coaster #73 (179 N top, v_min 8.28), Ferris
+wheel (1.09 mg / 0.907 mg), flat-curve ABCD (1125 N, μ_s 0.13), Example 2
+(13.4 m/s; wet → 0.187), banked Example 3 (27.6°), ISS g (8.67), ISS orbit
+(7.67 × 10³ m/s, 5.55 × 10³ s), planet Nutron (4.3 × 10²⁸ kg), Mr. Clean (130 J),
+concrete block (28°), elevator #25 (592 kJ / −588 kJ / 0), friction work
+(−3.92 J, −25 J), dot product (4, 60.3°), #36 (−1.8 J), F–x graph (25 J),
+W–E example (3.5 m/s), #64 (−1.2 J, assuming the figure's drop is 2.0 m),
+power (18 W), elevator motor (6.49 × 10⁴ W, 7.02 × 10⁴ W). Plus SI Q27/Q28 and
+the CLAUDE.md table.
+
+**Physics flag (fixed)**: at the top of a circle the contact force points
+toward the center inside a loop / on a string (N + mg = mv²/r) but AWAY from
+the center on a Ferris-wheel seat (mg − N = mv²/r). The seat-force template
+carries a per-skin `topContact` flag; the equation card's "don't use when"
+says so.
+
+**Not reproducible**: roller coaster #73(b) "point B → 290 N" — B is at an
+unlabelled position on the loop (the bottom would give 1022 N; 290 N matches
+a point ≈30° from the top). Skipped rather than guessed.
+
+**Beyond CLAUDE.md, added from the slides**: a "Power" topic under Ch 7
+(P = W/Δt, P = Fv with and without acceleration, kWh cost), the scalar
+product, work by friction, elevator-cable work, "which interval has the most
+work" graph reading, and a sliding-to-a-stop W–E template.
+
+**Done**
+- 44 new templates: Ch 6 ×12 (vertical circle 3, flat curve 3, banked 3,
+  conical 3), Ch 13 ×10, Ch 7 ×22 (constant force 6, varying 3, graphs 3,
+  spring work 3, W–E 4, power 3). Every Exam 2 topic now has ≥ 3 templates
+  (asserted). Unknown rotation verified for every declared variant (asserted).
+- `conceptTemplate()` factory in `templates/helpers.ts` for hand-written
+  conceptual MCQs (content stays data; one file per template).
+- Diagrams: vertical loop, flat curve (overhead), banked cross-section,
+  conical pendulum, orbit, force-at-angle, four-panel ranking, piecewise
+  F–x graph with shaded interval.
+- 14 new errors (km-not-converted, ratio-inverted, centripetal-as-extra-force,
+  orbit-mass-matters, weightless-means-no-gravity, integrated-wrong-power,
+  log-of-difference, ignored-negative-area, spring-work-missing-half,
+  work-by-vs-on-spring, minutes-not-converted, gravity-work-sign,
+  power-forgot-friction, kwh-units). 6 new equations (vertical-circle,
+  vmin-loop, conical-pendulum, dot-product, work-friction, power).
+- Tests: 371. F–x graph template is checked against an independent 20 000-slice
+  Riemann sum over 300 seeds; generator is asserted to produce negative regions.
+- Verified in headless Chromium: all new diagram kinds at 375 px, no console errors.
+
+**Next smallest safe task**: Session 4 (Equation Detective).
+
 ## Session 3 — Ch 6 / 13 / 7 ⏳
 ## Session 4 — Equation Detective ⏳
 ## Session 5 — Exam sim + weak spots ⏳

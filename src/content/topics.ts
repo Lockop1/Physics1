@@ -75,6 +75,7 @@ export const CHAPTERS: Chapter[] = [
       t("exam2", "Ch 7", "ch7.graphs", "Work from F–x graphs"),
       t("exam2", "Ch 7", "ch7.spring-work", "Spring work"),
       t("exam2", "Ch 7", "ch7.work-energy", "Work–energy theorem"),
+      t("exam2", "Ch 7", "ch7.power", "Power"),
     ],
   },
   // ---------------- Exam 1 ----------------

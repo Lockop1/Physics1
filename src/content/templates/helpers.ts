@@ -50,3 +50,63 @@ export function withParts(
 export function cap(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+// ---------------------------------------------------------------------------
+// Conceptual-MCQ factory: a list of hand-written cases, one drawn per seed.
+// ---------------------------------------------------------------------------
+import type { QuestionTemplate } from "../../engine/types";
+import { buildStringChoices } from "../../engine/distractors";
+
+export interface ConceptCase {
+  prompt: string;
+  answer: string;
+  wrong: { value: string; errorId: string }[];
+  /** Explanation shown as the worked solution. */
+  explanation: string;
+  latex?: string;
+  equationId?: string;
+  /** Optional per-case hints (else the template's). */
+  hints?: string[];
+}
+
+export interface ConceptMeta {
+  id: string;
+  topicId: string;
+  title: string;
+  source?: string;
+  difficulty?: 1 | 2 | 3;
+  equations: string[];
+  recipe: string[];
+  hints: string[];
+}
+
+export function conceptTemplate(meta: ConceptMeta, cases: ConceptCase[]): QuestionTemplate {
+  const base: QuestionTemplate = {
+    id: meta.id,
+    topicId: meta.topicId,
+    title: meta.title,
+    kind: "conceptual",
+    difficulty: meta.difficulty ?? 1,
+    generate(rng: Rng): GeneratedQuestion {
+      const c = rng.pick(cases);
+      const step: GeneratedQuestion["solution"][number] = { text: c.explanation };
+      if (c.latex) step.latex = c.latex;
+      if (c.equationId) step.equationId = c.equationId;
+      return {
+        templateId: meta.id,
+        seed: rng.seed,
+        prompt: c.prompt,
+        givens: [],
+        target: { symbol: "", unit: "", label: "the correct statement" },
+        answer: c.answer,
+        choices: buildStringChoices(rng, c.answer, c.wrong),
+        equations: meta.equations,
+        recipe: meta.recipe,
+        hints: c.hints ?? meta.hints,
+        solution: [step],
+      };
+    },
+  };
+  if (meta.source) base.source = meta.source;
+  return base;
+}

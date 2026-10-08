@@ -277,6 +277,43 @@ export const EQUATIONS: Equation[] = [
     derivedFrom: ["sum-fc", "newton-2"],
   },
 
+  {
+    id: "vertical-circle",
+    latex: "\\text{top: } N + mg = \\frac{mv^2}{r},\\qquad \\text{bottom: } N - mg = \\frac{mv^2}{r}",
+    name: "Vertical circle: seat / normal force (derived)",
+    chapter: "Ch 6",
+    variables: [v("N", "seat (normal) force or string tension", "N"), v("m", "mass", "kg"), v("v", "speed at that point", "m/s"), v("r", "radius of the loop", "m")],
+    useWhen: ["Roller-coaster loop, ball on a string, bucket of water — at the TOP or BOTTOM of the circle", "Both N and mg are vertical there, so the radial equation has no angles"],
+    dontUseWhen: ["At a point on the side of the circle (then mg has only a component toward the center)", "On a Ferris wheel the seat is UNDER the rider, so at the top N points away from the center: mg − N = mv²/r", "You treat mv²/r as a force on the diagram instead of as the net force"],
+    triggers: ["top of the loop", "bottom of the loop", "force of the seat", "Ferris wheel", "feels heavier"],
+    onSheet: false,
+    derivedFrom: ["sum-fc", "newton-2"],
+  },
+  {
+    id: "vmin-loop",
+    latex: "v_{\\min} = \\sqrt{g r}",
+    name: "Minimum speed at the top of a loop (derived)",
+    chapter: "Ch 6",
+    variables: [v("v_{\\min}", "slowest speed that keeps contact at the top", "m/s"), v("g", "9.80 m/s²", "m/s²"), v("r", "radius", "m")],
+    useWhen: ["'Minimum speed to stay on the track / keep the water in the bucket / keep the string taut' at the top of a vertical circle: set N = 0 (or T = 0)"],
+    dontUseWhen: ["At the bottom of the loop (there is no minimum speed there)", "You expect the mass to matter — it cancels"],
+    triggers: ["minimum speed", "just barely", "stay in the seat", "string goes slack"],
+    onSheet: false,
+    derivedFrom: ["vertical-circle"],
+  },
+  {
+    id: "conical-pendulum",
+    latex: "T\\cos\\theta = mg,\\qquad T\\sin\\theta = \\frac{mv^2}{r} \\;\\Rightarrow\\; a_c = g\\tan\\theta",
+    name: "Conical pendulum (derived)",
+    chapter: "Ch 6",
+    variables: [v("T", "string tension", "N"), v("\\theta", "angle of the string from the VERTICAL", "°"), v("r", "radius of the horizontal circle (= L sin θ)", "m"), v("a_c", "centripetal acceleration", "m/s²")],
+    useWhen: ["A mass on a string swings in a horizontal circle; only T and mg act", "The vertical part of T holds the weight; the horizontal part is the centripetal force"],
+    dontUseWhen: ["The angle is given from the horizontal — convert to the angle from the vertical first", "You set T = mg (T is always larger than mg here)"],
+    triggers: ["conical pendulum", "swings in a horizontal circle", "string makes an angle", "tetherball"],
+    onSheet: false,
+    derivedFrom: ["sum-fc", "newton-2"],
+  },
+
   // ================= Gravitation (Ch 13) =================
   {
     id: "grav-force",
@@ -326,6 +363,17 @@ export const EQUATIONS: Equation[] = [
   },
 
   // ================= Work (Ch 7) =================
+  {
+    id: "dot-product",
+    latex: "\\vec A\\cdot\\vec B = AB\\cos\\theta = A_xB_x + A_yB_y + A_zB_z",
+    name: "Scalar (dot) product",
+    chapter: "Ch 7",
+    variables: [v("A, B", "magnitudes", "—"), v("\\theta", "angle between the vectors", "°"), v("A_x, B_x, \\ldots", "components", "—")],
+    useWhen: ["Work as F·Δr", "Finding the angle between two vectors from their components: cos θ = (A·B)/(AB)"],
+    dontUseWhen: ["You want a vector result (the dot product is a scalar)", "You multiply magnitudes without the cos θ"],
+    triggers: ["scalar product", "dot product", "angle between the vectors", "i-hat j-hat"],
+    onSheet: true,
+  },
   {
     id: "work-const",
     latex: "W = F d \\cos\\theta",
@@ -383,6 +431,32 @@ export const EQUATIONS: Equation[] = [
     onSheet: true,
   },
 ];
+
+EQUATIONS.push(
+  {
+    id: "work-friction",
+    latex: "W_{f} = -f_k\\, d = -\\mu_k N d",
+    name: "Work done by kinetic friction (derived)",
+    chapter: "Ch 7",
+    variables: [v("f_k", "kinetic friction force", "N"), v("d", "distance slid", "m"), v("N", "normal force", "N")],
+    useWhen: ["An object slides a distance d on a rough surface: friction opposes the motion, θ = 180°, so its work is negative"],
+    dontUseWhen: ["Static friction (no sliding → no work)", "N was assumed to be mg under an angled pull"],
+    triggers: ["work done by friction", "dragged across a rough", "coefficient of kinetic friction"],
+    onSheet: false,
+    derivedFrom: ["work-const", "friction-kinetic"],
+  },
+  {
+    id: "power",
+    latex: "P_{\\text{avg}} = \\frac{W}{\\Delta t},\\qquad P = \\vec F\\cdot\\vec v = Fv\\cos\\theta",
+    name: "Power",
+    chapter: "Ch 7",
+    variables: [v("P", "power", "W = J/s"), v("W", "work done", "J"), v("\\Delta t", "time interval", "s"), v("v", "velocity", "m/s")],
+    useWhen: ["Rate at which work is done or energy is transferred", "Motor lifting at constant speed: P = Tv with T from ΣF = 0", "Electrical energy: kWh = kW × hours"],
+    dontUseWhen: ["Time is in minutes or hours without converting to seconds", "You forget friction in the force the motor must supply"],
+    triggers: ["power", "watts", "horsepower", "how fast is work done", "kWh", "motor"],
+    onSheet: true,
+  },
+);
 
 export const EQUATION_IDS = new Set(EQUATIONS.map((e) => e.id));
 

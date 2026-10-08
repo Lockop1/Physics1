@@ -8,7 +8,87 @@ export type DiagramSpec =
   | InclineDiagramSpec
   | PulleyDiagramSpec
   | CablesDiagramSpec
-  | VerticalBoxDiagramSpec;
+  | VerticalBoxDiagramSpec
+  | LoopDiagramSpec
+  | FlatCurveDiagramSpec
+  | BankedDiagramSpec
+  | ConicalDiagramSpec
+  | OrbitDiagramSpec
+  | WorkAngleDiagramSpec
+  | WorkRankDiagramSpec
+  | FxGraphDiagramSpec;
+
+/** Vertical circle (loop / Ferris wheel) with a marked point and its forces. */
+export interface LoopDiagramSpec {
+  kind: "loop";
+  point: "top" | "bottom" | "both";
+  radiusLabel?: string;
+  /** Label for the contact force: "N" (seat) or "T" (string). */
+  forceLabel?: string;
+  /** At the top, draw the contact force pointing UP (seat under the rider, Ferris wheel) instead of toward the center. */
+  topContactUp?: boolean;
+  showForces?: boolean;
+  caption?: string;
+}
+
+/** Overhead view of a car on a flat curve. */
+export interface FlatCurveDiagramSpec {
+  kind: "flat-curve";
+  radiusLabel?: string;
+  caption?: string;
+}
+
+/** Cross-section of a banked road with a car. */
+export interface BankedDiagramSpec {
+  kind: "banked";
+  angleDeg: number;
+  showForces?: boolean;
+  caption?: string;
+}
+
+/** Conical pendulum: string at angle from the vertical. */
+export interface ConicalDiagramSpec {
+  kind: "conical";
+  angleDeg: number; // from vertical
+  /** Label the angle as measured from the horizontal instead. */
+  fromHorizontal?: boolean;
+  lengthLabel?: string;
+  showForces?: boolean;
+  caption?: string;
+}
+
+/** Planet with a satellite orbit at altitude h. */
+export interface OrbitDiagramSpec {
+  kind: "orbit";
+  altitudeLabel?: string;
+  radiusLabel?: string;
+  /** Hide the altitude and show just the orbit radius. */
+  caption?: string;
+}
+
+/** A force at angle θ to a displacement. */
+export interface WorkAngleDiagramSpec {
+  kind: "work-angle";
+  angleDeg: number; // angle between F and d (0–180)
+  forceLabel?: string;
+  caption?: string;
+}
+
+/** Four labelled panels with a force at different angles to a rightward displacement. */
+export interface WorkRankDiagramSpec {
+  kind: "work-rank";
+  panels: { label: string; angleDeg: number }[];
+}
+
+/** Piecewise-linear F–x graph with a highlighted interval. */
+export interface FxGraphDiagramSpec {
+  kind: "fx-graph";
+  points: { x: number; F: number }[];
+  from?: number;
+  to?: number;
+  xUnit?: string;
+  fUnit?: string;
+}
 
 /** A force arrow applied to a block: angle in degrees, 0 = +x, positive = above horizontal. */
 export interface ForceArrow {
