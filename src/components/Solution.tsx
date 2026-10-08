@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
-import type { GeneratedQuestion, QuestionPart, SolutionStep } from "../engine/types";
+import type { Choice, GeneratedQuestion, QuestionPart, SolutionStep } from "../engine/types";
 import { equationById } from "../content/equations";
+import { errorById } from "../content/errors";
 import { Tex, RichText } from "../lib/latex";
 import { fmtDisplay } from "../engine/params";
+import { choiceLabel } from "./ChoiceList";
 
 export function EquationLink({ id }: { id: string }) {
   const eq = equationById(id);
@@ -11,6 +13,16 @@ export function EquationLink({ id }: { id: string }) {
     <Link className="eq-link" to={`/equations#${id}`} title={eq.name}>
       {eq.name}
     </Link>
+  );
+}
+
+export function EquationLinks({ ids }: { ids: string[] }) {
+  return (
+    <div className="eq-links">
+      {ids.map((id) => (
+        <EquationLink key={id} id={id} />
+      ))}
+    </div>
   );
 }
 
@@ -32,57 +44,73 @@ function answerText(answer: number | string, unit: string): string {
   return typeof answer === "number" ? `${fmtDisplay(answer)}${unit ? " " + unit : ""}` : answer;
 }
 
+/** "Why the other choices are wrong": each distractor with the mistake that produces it. Collapsed by default. */
+export function Distractors({ choices, unit }: { choices: Choice[]; unit: string }) {
+  const wrong = choices.filter((c) => !c.correct && c.errorId);
+  if (wrong.length === 0) return null;
+  return (
+    <details className="distractors">
+      <summary>Why the other choices are wrong</summary>
+      <ul>
+        {wrong.map((c, i) => {
+          const e = c.errorId ? errorById(c.errorId) : null;
+          return (
+            <li key={i}>
+              <RichText text={choiceLabel(c, unit)} /> — <strong>{e?.label ?? c.errorId}</strong>
+              {e ? `. ${e.explanation}` : ""}
+            </li>
+          );
+        })}
+      </ul>
+    </details>
+  );
+}
+
 /** Solution for one part of a multi-part question. */
 export function PartSolution({ part }: { part: QuestionPart }) {
   return (
     <div className="solution">
-      <div>
-        <strong>Answer {part.label}:</strong> <RichText text={answerText(part.answer, part.target.unit)} />
+      <div className="answer">
+        <RichText text={answerText(part.answer, part.target.unit)} />
       </div>
       <Steps steps={part.solution} />
+      <Distractors choices={part.choices} unit={part.target.unit} />
     </div>
   );
 }
 
-export function Solution({ q }: { q: GeneratedQuestion }) {
-  const ans = answerText(q.answer, q.target.unit);
+/**
+ * The full worked solution, in the order you'd actually think: the answer, the plan (which
+ * equations and why), then the steps. Everything else stays behind a disclosure.
+ */
+export function Solution({ q, omitSteps = false }: { q: GeneratedQuestion; omitSteps?: boolean }) {
   return (
-    <div className="solution stack">
+    <div className="solution">
       {q.parts ? (
-        <div>
-          <strong>Answers</strong>
-          <ul style={{ margin: "4px 0", paddingLeft: "1.2rem" }}>
-            {q.parts.map((p) => (
-              <li key={p.label}>
-                {p.label} <RichText text={answerText(p.answer, p.target.unit)} />
-              </li>
-            ))}
-          </ul>
+        <div className="answer">
+          {q.parts.map((p) => (
+            <div key={p.label}>
+              <span className="muted">{p.label}</span> <RichText text={answerText(p.answer, p.target.unit)} />
+            </div>
+          ))}
         </div>
       ) : (
-        <div>
-          <strong>Answer:</strong> <RichText text={ans} />
+        <div className="answer">
+          <RichText text={answerText(q.answer, q.target.unit)} />
         </div>
       )}
-      <div>
-        <strong>Plan</strong>
-        <ol className="recipe">
-          {q.recipe.map((r, i) => (
-            <li key={i}>
-              <RichText text={r} />
-            </li>
-          ))}
-        </ol>
-      </div>
-      <div>
-        <strong>Equations used</strong>
-        <div className="row" style={{ gap: 4 }}>
-          {q.equations.map((id) => (
-            <EquationLink key={id} id={id} />
-          ))}
-        </div>
-      </div>
-      {q.parts ? (
+      <h4>Plan</h4>
+      <ol className="recipe">
+        {q.recipe.map((r, i) => (
+          <li key={i}>
+            <RichText text={r} />
+          </li>
+        ))}
+      </ol>
+      <h4>Equations</h4>
+      <EquationLinks ids={q.equations} />
+      {!omitSteps && <h4>Steps</h4>}
+      {omitSteps ? null : q.parts ? (
         q.parts.map((p) => (
           <div key={p.label}>
             <strong>
@@ -92,12 +120,14 @@ export function Solution({ q }: { q: GeneratedQuestion }) {
           </div>
         ))
       ) : (
-        <div>
-          <strong>Worked solution</strong>
-          <Steps steps={q.solution} />
-        </div>
+        <Steps steps={q.solution} />
       )}
-      {q.note && <div className="small muted">{q.note}</div>}
+      {q.note && (
+        <p className="note" style={{ marginTop: 12 }}>
+          {q.note}
+        </p>
+      )}
+      {!q.parts && <Distractors choices={q.choices} unit={q.target.unit} />}
     </div>
   );
 }

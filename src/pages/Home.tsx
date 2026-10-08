@@ -1,47 +1,49 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { chaptersFor, CHAPTERS, type ExamId } from "../content/topics";
 import { templatesForTopic, TEMPLATES } from "../content/templates";
 import { errorById } from "../content/errors";
-import { getSettings, masteryFor, load, getExams, getErrorCounts } from "../lib/storage";
+import { getSettings, masteryFor, load, getErrorCounts } from "../lib/storage";
 import { topErrors } from "../engine/selection";
 import { MasteryBar } from "../components/MasteryBar";
 import { Countdown } from "../components/Countdown";
 
-function ExamSection({ exam, title }: { exam: ExamId; title: string }) {
+const Chevron = () => (
+  <svg className="chev" viewBox="0 0 18 18" aria-hidden="true">
+    <path d="m7 4 5 5-5 5" />
+  </svg>
+);
+
+function TopicList({ exam }: { exam: ExamId }) {
   return (
-    <section className="exam-section">
-      <h2>{title}</h2>
+    <>
       {chaptersFor(exam).map((ch) => {
-        const chTemplates = ch.topics.flatMap((t) => templatesForTopic(t.id).map((x) => x.id));
-        const chMastery = masteryFor(chTemplates);
+        const topics = ch.topics.filter((t) => templatesForTopic(t.id).length > 0);
+        if (topics.length === 0) return null;
         return (
           <div className="chapter" key={ch.id}>
-            <div className="row spread">
-              <h3>{ch.title}</h3>
-              {chTemplates.length > 0 && <span className="small muted stat">{chMastery.mastery === null ? "—" : `${Math.round(chMastery.mastery * 100)}% chapter mastery`}</span>}
-            </div>
-            <div className="topic-grid">
-              {ch.topics.map((t) => {
+            <h3>{ch.title}</h3>
+            <ul className="list">
+              {topics.map((t) => {
                 const temps = templatesForTopic(t.id);
                 const { mastery, attempts } = masteryFor(temps.map((x) => x.id));
-                const empty = temps.length === 0;
                 return (
-                  <Link key={t.id} to={empty ? "#" : `/topic/${t.id}`} className={"topic-card" + (empty ? " empty" : "")} aria-disabled={empty}>
-                    <div className="title">{t.title}</div>
-                    {empty ? <div className="small muted">coming in a later session</div> : <MasteryBar mastery={mastery} attempts={attempts} />}
-                    {!empty && (
-                      <div className="small muted">
-                        {temps.length} question type{temps.length === 1 ? "" : "s"}
+                  <li key={t.id}>
+                    <Link to={`/topic/${t.id}`} className="list-row">
+                      <div className="body">
+                        <div className="title">{t.title}</div>
                       </div>
-                    )}
-                  </Link>
+                      <MasteryBar mastery={mastery} attempts={attempts} compact />
+                      <Chevron />
+                    </Link>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </div>
         );
       })}
-    </section>
+    </>
   );
 }
 
@@ -50,103 +52,73 @@ export function HomePage() {
   const data = load();
   const last = data.lastQuestion;
   const traps = topErrors(getErrorCounts(), 3);
-  const exams = getExams();
-  const lastExam = exams[exams.length - 1];
   const overall = masteryFor(TEMPLATES.map((t) => t.id));
   const exam2Templates = CHAPTERS.filter((c) => c.exam === "exam2").flatMap((c) => c.topics).flatMap((t) => templatesForTopic(t.id).map((x) => x.id));
   const exam2 = masteryFor(exam2Templates);
+  const [exam, setExam] = useState<ExamId>("exam2");
+  const started = overall.attempts > 0;
+
   return (
     <div>
-      <div className="hero">
-        <div>
-          <h1>PHY2048 practice</h1>
-          <p className="muted">Fresh numbers every time. Pick a topic, or jump back in.</p>
-          <div className="small muted stat">
-            {overall.attempts} attempts · Exam 2 mastery {exam2.mastery === null ? "—" : `${Math.round(exam2.mastery * 100)}%`}
-          </div>
-        </div>
-        <div className="stack">
-          <Countdown examDate={settings.examDate} />
-          <div className="row">
-            {last && (
-              <Link className="btn primary" to={`/q/${last}`}>
-                Continue
-              </Link>
-            )}
-            <Link className={"btn" + (last ? "" : " primary")} to="/practice-exam2">
-              Random Exam 2 question
-            </Link>
-            <Link className="btn" to="/detective">
-              Equation Detective
-            </Link>
-            <Link className="btn" to="/exam">
-              Exam simulation
-            </Link>
-            <Link className="btn" to="/drill/weak">
-              Weak spots
-            </Link>
-          </div>
-        </div>
+      <div className="home-top">
+        <h1>Physics 1</h1>
+        {exam2.mastery !== null && <span className="small muted stat">Exam 2 · {Math.round(exam2.mastery * 100)}%</span>}
       </div>
+      <Countdown examDate={settings.examDate} />
 
-      <div className="practice" style={{ marginBottom: 18 }}>
-        <div className="card">
-          <h2>Your top traps</h2>
-          {traps.length === 0 ? (
-            <p className="muted small">No named mistakes recorded yet. Once you pick a distractor, it shows up here with a drill button.</p>
-          ) : (
-            <ul className="template-list">
-              {traps.map(({ errorId, count }) => {
-                const e = errorById(errorId);
-                return (
-                  <li key={errorId}>
-                    <div className="grow">
-                      <strong>{e?.label ?? errorId}</strong> <span className="badge">×{count}</span>
-                      <div className="small muted">{e?.explanation}</div>
+      <section className="start">
+        <Link className="btn primary big" to={last ? `/q/${last}` : "/practice-exam2"}>
+          {last ? "Continue practicing" : "Start practicing"}
+        </Link>
+        <div className="start-secondary">
+          <Link className="btn" to="/practice-exam2">
+            Random Exam 2
+          </Link>
+          <Link className="btn" to={started ? "/drill/weak" : "/detective"}>
+            {started ? "Weak spots" : "Detective"}
+          </Link>
+        </div>
+      </section>
+
+      {traps.length > 0 && (
+        <section>
+          <div className="section-title">Watch out for</div>
+          <ul className="list">
+            {traps.map(({ errorId, count }) => {
+              const e = errorById(errorId);
+              return (
+                <li key={errorId}>
+                  <Link to={`/drill/error/${errorId}`} className="list-row trap-row">
+                    <div className="body">
+                      <div className="title">{e?.label ?? errorId}</div>
+                      <div className="sub">{e?.explanation}</div>
                     </div>
-                    <Link className="btn" to={`/drill/error/${errorId}`}>
-                      Drill
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-        <div className="card">
-          <h2>Exam simulations</h2>
-          {lastExam ? (
-            <div className="stack">
-              <div>
-                Last: <strong>{Math.round((100 * lastExam.score) / lastExam.count)}%</strong> ({lastExam.score}/{lastExam.count}) on {new Date(lastExam.finishedAt).toLocaleDateString()}
-              </div>
-              {exams.length > 1 && (
-                <div className="small muted">
-                  Recent scores: {exams.slice(-6).map((r) => `${Math.round((100 * r.score) / r.count)}%`).join(" · ")}
-                </div>
-              )}
-              <div className="row">
-                <Link className="btn" to={`/exam/results/${lastExam.id}`}>
-                  Review last
-                </Link>
-                <Link className="btn primary" to="/exam">
-                  New exam
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="stack">
-              <p className="muted small">No simulations yet. 20 mixed MCQs, 75-minute timer, results by topic and by named mistake.</p>
-              <Link className="btn primary" to="/exam">
-                Take a practice exam
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
+                    <span className="pill bad">×{count}</span>
+                    <Chevron />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
-      <ExamSection exam="exam2" title="Exam 2" />
-      <ExamSection exam="exam1" title="Exam 1 review" />
+      <section>
+        <div className="row spread" style={{ marginBottom: 4 }}>
+          <div className="section-title" style={{ margin: 0 }}>
+            Topics
+          </div>
+          <div className="seg mini" role="group" aria-label="exam">
+            <button className={exam === "exam2" ? "on" : ""} onClick={() => setExam("exam2")}>
+              Exam 2
+            </button>
+            <button className={exam === "exam1" ? "on" : ""} onClick={() => setExam("exam1")}>
+              Exam 1
+            </button>
+          </div>
+        </div>
+        <TopicList exam={exam} />
+      </section>
     </div>
   );
 }

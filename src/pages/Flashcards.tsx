@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { pickFlashcard } from "../lib/detective";
 import { FLASHCARDS, type Flashcard } from "../content/detective/flashcards";
 import { getDetective, recordFlashcard } from "../lib/storage";
 import { equationById } from "../content/equations";
 import { Tex } from "../lib/latex";
 import { EquationLink } from "../components/Solution";
+import { PageHeader } from "../components/PageHeader";
+import { ActionBar } from "../components/ActionBar";
 
 export function FlashcardsPage() {
   const [card, setCard] = useState<Flashcard>(() => pickFlashcard());
@@ -16,6 +17,7 @@ export function FlashcardsPage() {
     setCount((c) => ({ knew: c.knew + (knew ? 1 : 0), missed: c.missed + (knew ? 0 : 1) }));
     setCard(pickFlashcard(card.id));
     setFlipped(false);
+    window.scrollTo({ top: 0 });
   };
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -28,66 +30,51 @@ export function FlashcardsPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
-  const stats = getDetective().flashcards[card.id];
   const seen = Object.keys(getDetective().flashcards).length;
   return (
-    <div>
-      <p className="small muted row spread">
-        <span>
-          <Link to="/detective">Detective</Link> › Situation flashcards
-        </span>
-        <span className="stat">
-          this session {count.knew} ✓ / {count.missed} ✗ · {seen}/{FLASHCARDS.length} cards seen
-        </span>
-      </p>
+    <div className="question">
+      <PageHeader back={{ to: "/detective", label: "Detective" }} title="Flashcards" right={<span className="small muted stat">{count.knew + count.missed > 0 ? `${count.knew}/${count.knew + count.missed}` : `${seen}/${FLASHCARDS.length}`}</span>} />
       <div className={"flashcard card" + (flipped ? " flipped" : "")} onClick={() => setFlipped((f) => !f)} role="button" tabIndex={0}>
         {!flipped ? (
           <div className="fc-front">
-            <div className="small muted">Situation</div>
+            <div className="fc-label">Situation</div>
             <div className="fc-text">{card.front}</div>
-            <div className="small muted">Which equation(s)? Tap / space to flip.</div>
+            <div className="small muted">Which equations? Tap to flip.</div>
           </div>
         ) : (
           <div className="fc-back stack">
-            <div className="small muted">Equation(s)</div>
+            <div className="fc-label">Equations</div>
             {card.equationIds.map((id) => {
               const eq = equationById(id);
               return eq ? (
                 <div key={id}>
                   <Tex block>{eq.latex}</Tex>
-                  <div className="small">
-                    <EquationLink id={id} />
-                  </div>
+                  <EquationLink id={id} />
                 </div>
               ) : null;
             })}
-            <div>
+            <p style={{ margin: 0 }}>
               <strong>Why:</strong> {card.why}
-            </div>
+            </p>
           </div>
         )}
       </div>
-      <div className="actions" style={{ justifyContent: "center" }}>
+      <ActionBar>
         {!flipped ? (
           <button className="primary" onClick={() => setFlipped(true)}>
             Flip <kbd>space</kbd>
           </button>
         ) : (
           <>
+            <button className="secondary" onClick={() => next(false)}>
+              Missed it <kbd>2</kbd>
+            </button>
             <button className="primary" onClick={() => next(true)}>
               Knew it <kbd>1</kbd>
             </button>
-            <button onClick={() => next(false)}>
-              Didn't <kbd>2</kbd>
-            </button>
           </>
         )}
-      </div>
-      {stats && stats.seen > 0 && (
-        <p className="small muted" style={{ textAlign: "center" }}>
-          This card: missed {stats.missed} of {stats.seen}.
-        </p>
-      )}
+      </ActionBar>
     </div>
   );
 }

@@ -1,10 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { EQUATIONS, CHAPTER_ORDER, equationsByChapter } from "../content/equations";
 import { EquationCard } from "../components/EquationCard";
 
 export function EquationSheetPage() {
   const [query, setQuery] = useState("");
   const [chapter, setChapter] = useState("all");
+  const { hash } = useLocation();
+  const target = hash.replace(/^#/, "");
   const chapters = useMemo(() => Array.from(new Set(EQUATIONS.map((e) => e.chapter))).sort((a, b) => CHAPTER_ORDER.indexOf(a) - CHAPTER_ORDER.indexOf(b)), []);
   const q = query.trim().toLowerCase();
   const matches = (e: (typeof EQUATIONS)[number]) => {
@@ -14,35 +17,41 @@ export function EquationSheetPage() {
     return hay.includes(q);
   };
   const groups = equationsByChapter().map((g) => ({ chapter: g.chapter, equations: g.equations.filter(matches) })).filter((g) => g.equations.length > 0);
+
+  // deep link from a solution: open and scroll to that equation
+  useEffect(() => {
+    if (!target) return;
+    const el = document.getElementById(target) as HTMLDetailsElement | null;
+    if (el) {
+      el.open = true;
+      setTimeout(() => el.scrollIntoView({ block: "start" }), 50);
+    }
+  }, [target]);
+
   return (
     <div>
-      <h1>Equation sheet</h1>
-      <p className="muted">
-        "On sheet" = expected on the provided formula sheet; "derived" = build it from sheet equations. Each card shows when to use it, when NOT to, and the phrases that point to it.
-      </p>
-      <div className="row" style={{ marginBottom: 14 }}>
-        <input type="text" placeholder="Search: keyword, symbol, trigger phrase…" value={query} onChange={(e) => setQuery(e.target.value)} style={{ flex: "1 1 240px" }} />
-        <select value={chapter} onChange={(e) => setChapter(e.target.value)}>
-          <option value="all">All chapters</option>
+      <h1>Equations</h1>
+      <p className="helper">Tap one to see when it applies and when it doesn't.</p>
+      <div className="search-row">
+        <input type="text" placeholder="Search" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="search equations" />
+        <select value={chapter} onChange={(e) => setChapter(e.target.value)} aria-label="chapter" style={{ maxWidth: 160 }}>
+          <option value="all">All</option>
           {chapters.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>
           ))}
         </select>
-        <span className="small muted">{groups.reduce((n, g) => n + g.equations.length, 0)} equations</span>
       </div>
       {groups.map(({ chapter, equations }) => (
-        <section key={chapter} className="exam-section">
-          <h2>{chapter}</h2>
-          <div className="eq-grid">
-            {equations.map((eq) => (
-              <EquationCard key={eq.id} eq={eq} />
-            ))}
-          </div>
+        <section key={chapter}>
+          <div className="section-title">{chapter}</div>
+          {equations.map((eq) => (
+            <EquationCard key={eq.id} eq={eq} open={eq.id === target} />
+          ))}
         </section>
       ))}
-      {groups.length === 0 && <p className="muted">Nothing matches.</p>}
+      {groups.length === 0 && <p className="empty">Nothing matches.</p>}
     </div>
   );
 }
